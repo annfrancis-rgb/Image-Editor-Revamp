@@ -1,0 +1,1645 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aiRA Image Studio — Prototype 2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap">
+<style>
+/* ===========================================================================
+   aiRA Design System v1.1
+   Type: ONE Roboto ramp, weights 400/500/600 only. Thirteen documented
+   size/line-height pairs — nothing off-ramp, no 700, no letter-spacing
+   anywhere except the wordmark at -0.015em.
+   Spacing: 4px grid, scale values only.
+   =========================================================================== */
+:root{
+  --aira-bg-canvas:#F6F8FA; --aira-bg-elevated:#FFFFFF; --aira-bg-surface-alt:#FBFCFD;
+  --aira-bg-selected:#EEF0FF; --aira-bg-hover:#EEF1F4; --aira-bg-muted:#EEF1F4;
+  --aira-bg-brand:#3438C9;
+  --aira-text-primary:#111827; --aira-text-secondary:#364152; --aira-text-tertiary:#6B7785;
+  --aira-text-placeholder:#9AA4B2; --aira-text-disabled:#9AA4B2;
+  --aira-text-danger:#B11E1E; --aira-text-warning:#8A5500; --aira-text-info:#1F6AAA; --aira-text-success:#185C32; --aira-red:#D92D2D;
+  /* Banner tone surfaces — tinted fill + tone border, read off the published design system site */
+  --aira-bg-info:#E5F1FB; --aira-border-info:#BFDCF5;
+  --aira-bg-warning:#FFF6E0; --aira-border-warning:#E89B1A;
+  --aira-bg-success:#E7F6EC; --aira-border-success:#2A9D55;
+  --aira-bg-danger:#FFECEC; --aira-border-danger:#D92D2D;
+  --aira-border-default:#E2E6EB; --aira-border-brand:#3438C9; --aira-border-focus:#3438C9;
+  --aira-indigo-600:#3438C9; --aira-indigo-400:#6268FF; --aira-indigo-300:#8E97FF;
+  --aira-grey-400:#9AA4B2; --aira-grey-300:#C9D0D9; --aira-ink-3:#4D5867;
+  --aira-label-ink:#1A2434;
+
+  --aira-sp-1:4px; --aira-sp-2:8px; --aira-sp-3:12px; --aira-sp-4:16px;
+  --aira-sp-5:20px; --aira-sp-6:24px; --aira-sp-8:32px; --aira-sp-12:48px;
+
+  --aira-radius-sm:4px; --aira-radius-md:8px; --aira-radius-lg:12px;
+  --aira-radius-xl:16px; --aira-radius-full:9999px;
+
+  --aira-shadow-sm:0 1px 2px rgba(17,24,39,.06);
+  --aira-shadow-md:0 4px 12px rgba(17,24,39,.08);
+  --aira-shadow-lg:0 12px 32px rgba(17,24,39,.12);
+
+  --motion-fast:120ms ease-out; --motion-base:200ms ease-out;
+
+  /* Capillary product chrome — the host app's navigation, not an aiRA surface.
+     Taken from the reference screenshots. */
+  --cap-nav-bg:#1F1D26; --cap-nav-active:#34323D; --cap-nav-ink:#F2F3F5;
+  --cap-nav-ink-dim:#B9BCC4; --cap-nav-rule:#3A3843;
+
+  /* one stacking ladder */
+  --z-canvas:6; --z-drawer:10; --z-menu:40; --z-overlay:50; --z-toast:60;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'Roboto',-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;
+  font:400 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;   /* Body md — the default body */
+  background:var(--aira-bg-elevated);color:var(--aira-text-primary);overflow:hidden}
+button,input,textarea{font-family:inherit}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* one global focus ring, no per-component override */
+:focus-visible{outline:2px solid var(--aira-border-focus);outline-offset:2px}
+
+#app{height:100vh;display:flex;overflow:hidden}
+
+/* ---------- host navigation ---------- */
+.nav{width:280px;flex:none;height:100%;background:var(--cap-nav-bg);display:flex;flex-direction:column;
+  padding-bottom:var(--aira-sp-4);overflow-y:auto;overflow-x:hidden}
+.nav.icons{width:72px}
+.navtop{height:64px;flex:none;display:flex;align-items:center;gap:var(--aira-sp-2);padding:0 var(--aira-sp-5)}
+.navlogo{display:flex;align-items:center;gap:var(--aira-sp-2);font:500 18px/26px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:#fff;
+  letter-spacing:-0.015em;white-space:nowrap;overflow:hidden}   /* AiraWordmark: the one licensed tracking */
+.nav.icons .navtop{padding:0;justify-content:center}
+.nav.icons .navlogo{display:none}
+.navtoggle{flex:none}
+.navitem{display:flex;align-items:center;gap:var(--aira-sp-4);width:100%;height:48px;padding:0 var(--aira-sp-5);
+  border:0;background:none;cursor:pointer;color:var(--cap-nav-ink-dim);font:400 15px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;text-align:left}
+.navitem:hover{background:rgba(255,255,255,.06);color:var(--cap-nav-ink)}
+.navitem.on{background:var(--cap-nav-active);color:#fff;font-weight:500}
+.navitem .nlbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav.icons .navitem{justify-content:center;padding:0;gap:0}
+.nav.icons .navitem .nlbl,.nav.icons .navchev,.nav.icons .navsub{display:none}
+.navsub{display:flex;flex-direction:column;position:relative;padding-bottom:var(--aira-sp-2)}
+.navsub .navitem{height:40px;padding-left:var(--aira-sp-12);font:400 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif}
+.navsubline{position:absolute;left:var(--aira-sp-8);top:0;bottom:var(--aira-sp-2);width:2px;background:var(--cap-nav-rule)}
+.navrule{height:1px;background:var(--cap-nav-rule);margin:var(--aira-sp-3) var(--aira-sp-5)}
+.nav.icons .navrule{margin:var(--aira-sp-3) var(--aira-sp-4)}
+
+/* ---------- product frame ---------- */
+.main{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;background:var(--aira-bg-canvas)}
+.topbar{height:64px;flex:none;display:flex;align-items:center;gap:var(--aira-sp-3);padding:0 var(--aira-sp-6);
+  background:var(--aira-bg-elevated)}
+.space{display:flex;align-items:center;gap:var(--aira-sp-1);height:36px;padding:0 var(--aira-sp-2);border:0;
+  border-radius:var(--aira-radius-md);background:none;cursor:pointer;font:500 16px/24px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.space:hover{background:var(--aira-bg-hover)}
+.tbsep{width:1px;height:24px;background:var(--aira-border-default);flex:none}
+.sessions{display:flex;align-items:center;gap:var(--aira-sp-2);height:36px;padding:0 var(--aira-sp-4);
+  border-radius:var(--aira-radius-full);border:1px solid var(--aira-border-default);background:var(--aira-bg-elevated);
+  cursor:pointer;font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.sessions:hover{background:var(--aira-bg-hover)}
+.me{width:36px;height:36px;flex:none;border-radius:var(--aira-radius-full);border:0;background:#D6DAE0;
+  color:var(--aira-text-secondary);font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.cols{flex:1;min-height:0;display:flex}
+
+/* ---------- chat ---------- */
+.chat{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+/* With an artifact panel open the chat yields whatever the canvas needs and keeps the rest.
+   881 = 560 canvas floor + 320 drawer + 1 border. */
+.chat.narrow{flex:0 1 auto;min-width:480px;width:clamp(480px,calc(100% - 881px),560px);
+  border-right:1px solid var(--aira-border-default)}
+.threadwrap{flex:1;min-height:0;position:relative;display:flex}
+.thread{flex:1;min-width:0;overflow:auto;padding:var(--aira-sp-6) 0 var(--aira-sp-4)}
+.tinner{max-width:608px;margin:0 auto;padding:0 var(--aira-sp-6);display:flex;flex-direction:column;gap:var(--aira-sp-6)}
+.chat.narrow .tinner{max-width:none}
+.turn{display:flex;flex-direction:column;gap:var(--aira-sp-3)}
+.umsg{align-self:flex-end;max-width:80%;background:var(--aira-bg-muted);color:var(--aira-text-primary);
+  padding:var(--aira-sp-2) var(--aira-sp-4);border-radius:var(--aira-radius-md);font:400 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif}
+.amsg{font:400 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);white-space:pre-wrap}
+.amsg b,.amsg strong{font-weight:600}
+.alist{margin:0;padding-left:var(--aira-sp-5);font:400 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.artcard{display:flex;align-items:center;gap:var(--aira-sp-4);width:100%;padding:var(--aira-sp-4);
+  border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-md);
+  background:var(--aira-bg-elevated);cursor:pointer;text-align:left}
+.artcard:hover{background:var(--aira-bg-hover)}
+.artcard .ai{width:40px;height:40px;flex:none;border-radius:var(--aira-radius-md);background:var(--aira-bg-selected);
+  display:flex;align-items:center;justify-content:center}
+.artcard .at{font:500 16px/24px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.artcard .av{font:400 13px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)}
+.toolblk{background:var(--aira-bg-muted);border-radius:var(--aira-radius-md);
+  padding:var(--aira-sp-3) var(--aira-sp-4);font:500 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);
+  display:flex;gap:var(--aira-sp-2);align-items:flex-start}
+.toolblk .tri{flex:none;margin-top:var(--aira-sp-1)}
+.banner{display:flex;align-items:flex-start;gap:var(--aira-sp-3);padding:var(--aira-sp-4);
+  border-radius:var(--aira-radius-md);border:1px solid var(--aira-border-default);background:var(--aira-bg-canvas)}
+/* the leading icon sits level with the first line of text (glyph-centred on the 22px title line) */
+.banner .bnr-ic{display:inline-flex;align-items:center;align-self:flex-start;height:22px;flex:none}
+.banner .bnr-body{flex:1;min-width:0}
+/* borderless dismiss, glyph level with the first line, top-right per the close-button rule */
+.banner .bnr-x{flex:none;align-self:flex-start;width:24px;height:22px;display:inline-flex;align-items:center;
+  justify-content:center;border:0;background:none;cursor:pointer;padding:0;border-radius:var(--aira-radius-sm);color:var(--aira-text-tertiary)}
+.banner .bnr-x:hover{background:rgba(17,24,39,.06)}
+.banner .bt{font:500 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-warning)}
+.banner.info{background:var(--aira-bg-info);border-color:var(--aira-border-info)}
+.banner.info .bt{color:var(--aira-text-info)}
+.banner.warning{background:var(--aira-bg-warning);border-color:var(--aira-border-warning)}
+.banner.warning .bt{color:var(--aira-text-warning)}
+.banner.success{background:var(--aira-bg-success);border-color:var(--aira-border-success)}
+.banner.success .bt{color:var(--aira-text-success)}
+.banner.danger{background:var(--aira-bg-danger);border-color:var(--aira-border-danger)}
+.banner.danger .bt{color:var(--aira-text-danger)}
+.banner .bb{font:400 13px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-secondary)}
+
+/* suggestion nudges — AiraButton secondary, size lg, pill. Click fills the composer. */
+.nudges{display:flex;flex-wrap:wrap;gap:var(--aira-sp-2);margin-top:var(--aira-sp-1)}
+.nudge{display:flex;align-items:center;gap:var(--aira-sp-2);height:44px;padding:0 var(--aira-sp-4);
+  border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-full);
+  background:var(--aira-bg-elevated);cursor:pointer;font:500 15px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-label-ink);
+  white-space:nowrap;transition:background var(--motion-fast)}
+.nudge:hover{background:var(--aira-bg-hover)}
+
+/* ---------- composer ---------- */
+.composer{flex:none;padding-bottom:var(--aira-sp-6)}
+.cinner{max-width:608px;margin:0 auto;padding:0 var(--aira-sp-6);position:relative}
+.chat.narrow .cinner,.chat.narrow .cardwrap{max-width:none}
+.cbox{border:1px solid var(--aira-bg-brand);border-radius:var(--aira-radius-xl);background:var(--aira-bg-elevated);
+  display:flex;flex-direction:column;overflow:hidden}
+.cbox.pill{border-radius:var(--aira-radius-full)}
+.cchips{display:flex;gap:var(--aira-sp-2);padding:var(--aira-sp-3) var(--aira-sp-3) 0;overflow-x:auto;overflow-y:hidden}
+.cchips::-webkit-scrollbar{height:4px}
+.cchips::-webkit-scrollbar-track{background:transparent}
+.cchips::-webkit-scrollbar-thumb{background:rgba(17,24,39,.22);border-radius:2px}
+.crow{display:flex;align-items:center;gap:var(--aira-sp-2);
+  padding:var(--aira-sp-2) var(--aira-sp-3) var(--aira-sp-2) var(--aira-sp-4)}
+.cinput{flex:1;min-width:0;min-height:36px;font:400 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);
+  border:0;outline:0;background:none}
+.cinput::placeholder{color:var(--aira-text-placeholder)}
+.iconbtn{width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;border:0;
+  background:none;cursor:pointer;border-radius:var(--aira-radius-md);padding:0;color:var(--aira-text-secondary)}
+.iconbtn:hover{background:var(--aira-bg-hover)}
+.send{width:32px;height:32px;flex:none;border-radius:var(--aira-radius-full);display:flex;align-items:center;
+  justify-content:center;background:var(--aira-bg-muted);color:var(--aira-text-disabled);border:0;cursor:pointer;padding:0}
+.send.on{background:var(--aira-bg-brand);color:#fff}
+.scrolldown{position:absolute;left:var(--aira-sp-6);right:var(--aira-sp-6);top:-20px;width:max-content;
+  max-width:calc(100% - var(--aira-sp-12));margin-inline:auto;height:32px;padding:0 var(--aira-sp-3);
+  border-radius:var(--aira-radius-full);background:var(--aira-bg-elevated);border:1px solid var(--aira-border-default);
+  box-shadow:var(--aira-shadow-md);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+
+/* ---------- clarification card: pinned above the composer, same width ---------- */
+.cardwrap{max-width:608px;margin:0 auto var(--aira-sp-3);padding:0 var(--aira-sp-6)}
+.qcard{border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-lg);
+  background:var(--aira-bg-elevated);box-shadow:var(--aira-shadow-md)}
+.qhead{display:flex;align-items:flex-start;gap:var(--aira-sp-2);padding:var(--aira-sp-4) var(--aira-sp-4) var(--aira-sp-3)}
+.qtitle{flex:1;min-width:0;font:500 16px/24px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.qresolved{display:flex;align-items:center;gap:var(--aira-sp-2);margin:0 var(--aira-sp-4) var(--aira-sp-3);
+  padding:var(--aira-sp-2) var(--aira-sp-3);border-radius:var(--aira-radius-md);background:var(--aira-bg-selected);
+  font:500 13px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-indigo-600)}
+.qopts{display:flex;flex-direction:column;gap:var(--aira-sp-1);padding:0 var(--aira-sp-3)}
+.qopt{display:flex;align-items:center;gap:var(--aira-sp-3);width:100%;padding:var(--aira-sp-3);border:0;
+  border-radius:var(--aira-radius-md);background:transparent;cursor:pointer;text-align:left;
+  font:400 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.qopt:hover{background:var(--aira-bg-hover)}
+.qopt .qsz{margin-left:auto;font:400 12px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary);flex:none}
+.qtyped{display:flex;align-items:center;gap:var(--aira-sp-2);margin:var(--aira-sp-3) var(--aira-sp-3) 0;
+  padding:0 var(--aira-sp-3);border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-md);
+  background:var(--aira-bg-canvas)}
+.qtyped input{flex:1;min-width:0;height:36px;border:0;outline:0;background:none;
+  font:400 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.qtyped input::placeholder{color:var(--aira-text-placeholder)}
+.qfoot{display:flex;align-items:center;gap:var(--aira-sp-2);padding:var(--aira-sp-3) var(--aira-sp-4) var(--aira-sp-4);
+  justify-content:flex-end}
+
+/* ---------- home ---------- */
+.home{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:var(--aira-sp-6)}
+.homeinner{width:100%;max-width:608px}
+.greet{font:500 32px/40px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);text-align:center}   /* Display md */
+.sub{margin-top:var(--aira-sp-2);font:400 16px/26px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-secondary);text-align:center}
+.startchips{margin-top:var(--aira-sp-4);display:flex;flex-wrap:wrap;gap:var(--aira-sp-2);justify-content:center}
+
+/* ---------- right rail (session status) ---------- */
+.rail{width:320px;flex:none;padding:var(--aira-sp-6) var(--aira-sp-6) 0;overflow-y:auto}
+.railcard{border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-lg);
+  background:var(--aira-bg-elevated);padding:var(--aira-sp-4);display:flex;flex-direction:column;gap:var(--aira-sp-4)}
+.railsec .rl{display:flex;align-items:center;gap:var(--aira-sp-1);border:0;background:none;padding:0;cursor:pointer;
+  font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.railsec .rv{margin-top:var(--aira-sp-1);font:400 13px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)}
+.railsec .rk{margin-top:var(--aira-sp-3);font:500 11px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;text-transform:uppercase;color:var(--aira-text-tertiary)}
+.railrow{margin-top:var(--aira-sp-1);display:flex;align-items:center;gap:var(--aira-sp-2);
+  font:400 13px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-secondary)}
+
+/* ---------- artifact panel ---------- */
+.panel{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--aira-bg-elevated)}
+.phead{flex:none;height:64px;display:flex;align-items:center;gap:var(--aira-sp-2);padding:0 var(--aira-sp-6)}
+.phead.filerow{height:52px;border-bottom:1px solid var(--aira-border-default)}
+.ptitle{flex:1;min-width:0;display:flex;align-items:baseline;gap:0;font:600 16px/24px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);
+  overflow:hidden;white-space:nowrap}
+.ptitle .pdim{flex:none;font:400 13px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary);margin-left:var(--aira-sp-2)}
+.pbtn{width:32px;height:32px;flex:none;border-radius:var(--aira-radius-md);border:0;background:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;color:var(--aira-text-secondary)}
+.pbtn:hover{background:var(--aira-bg-hover)}
+.ratiolock.on{color:var(--aira-indigo-600)}
+.strip{flex:none;display:flex;align-items:center;gap:var(--aira-sp-2);padding:var(--aira-sp-4) var(--aira-sp-6) var(--aira-sp-3);
+  border-bottom:1px solid var(--aira-border-default)}
+.hidebtn{flex:none;display:flex;align-items:center;gap:var(--aira-sp-1);border:0;background:none;cursor:pointer;
+  font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-secondary);padding:0;white-space:nowrap}
+.thumbs{flex:1;display:flex;gap:var(--aira-sp-2);min-width:0;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
+.thumbs::-webkit-scrollbar{height:4px}
+.thumbs::-webkit-scrollbar-track{background:transparent}
+.thumbs::-webkit-scrollbar-thumb{background:rgba(17,24,39,.22);border-radius:2px}
+.thumb{width:48px;height:48px;flex:none;border-radius:var(--aira-radius-md);overflow:hidden;
+  border:2px solid transparent;opacity:.5;padding:0;background:var(--aira-bg-canvas);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;line-height:0}
+.thumb:hover{opacity:.85}
+.thumb.on{border-color:var(--aira-border-brand);opacity:1}
+.tcell{position:relative;flex:none;border-radius:var(--aira-radius-md)}
+/* Google-Photos hover select on the strip: the circle selects, it never changes the active image */
+.tcheck{position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:var(--aira-radius-full);border:0;padding:0;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity var(--aira-motion-fast);
+  z-index:2;background:rgba(17,24,39,.34)}
+.tcheck::before{content:"";position:absolute;inset:0;border-radius:var(--aira-radius-full);border:1.5px solid #fff}
+.tcell:hover .tcheck,.strip.selecting .tcheck,.tcell.sel .tcheck{opacity:1}
+.tcheck.on{background:var(--aira-bg-brand)}
+.tcheck.on::before{border-color:var(--aira-bg-brand)}
+.gallbtn.primary{background:var(--aira-bg-brand);color:#fff;border-color:transparent}
+.gallbtn.primary:hover{background:#2C30B4}
+.chev{width:32px;height:32px;flex:none;border-radius:var(--aira-radius-md);display:flex;align-items:center;
+  justify-content:center;border:1px solid var(--aira-border-default);background:var(--aira-bg-elevated);
+  cursor:pointer;padding:0;color:var(--aira-text-secondary)}
+.chev[disabled]{opacity:.4;cursor:default}
+.gallbtn{flex:none;display:flex;align-items:center;gap:var(--aira-sp-2);height:36px;
+  padding:0 var(--aira-sp-4);border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-md);
+  background:var(--aira-bg-elevated);font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);
+  white-space:nowrap;cursor:pointer}
+.gallbtn:hover{background:var(--aira-bg-hover)}
+.striptools{margin-left:auto;flex:none;display:flex;align-items:center;gap:var(--aira-sp-2)}
+.gallbtn.ghost{border-color:transparent;background:none;color:var(--aira-text-secondary)}
+.gallbtn.ghost:hover{background:var(--aira-bg-hover)}
+.selcount{font:500 13px/1 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary);white-space:nowrap;margin-right:var(--aira-sp-1)}
+.filebar{flex:none;height:52px;display:flex;align-items:center;gap:var(--aira-sp-2);padding:0 var(--aira-sp-6);
+  border-top:1px solid var(--aira-border-default);border-bottom:1px solid var(--aira-border-default)}
+.fname{flex:1;min-width:0;font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fname span{font:400 13px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)}
+.work{flex:1;min-height:0;display:flex;min-width:0}
+
+/* The canvas: a TRACK between the scroller and the image, sized max(100%, content).
+   Centring inside a box that can never be smaller than its child means the free space
+   is never negative — so no part of the image is pushed past the scroller's start edge
+   where scrollLeft cannot reach it. */
+.canvaswrap{flex:1;min-width:0;position:relative;overflow:hidden;background:var(--aira-bg-surface-alt);
+  container-type:inline-size}
+.canvasarea{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain;display:block}
+.canvastrack{min-width:100%;min-height:100%;width:max-content;height:max-content;display:flex;
+  align-items:center;justify-content:center;padding:var(--aira-sp-6) var(--aira-sp-6) 80px}
+.imgframe{position:relative;flex:none;line-height:0}
+.imgframe.arming{cursor:crosshair}
+.imgframe.zoomable{cursor:zoom-in}
+.imgshadow{position:relative;border-radius:var(--aira-radius-md);overflow:hidden;
+  box-shadow:var(--aira-shadow-lg);line-height:0}
+.genwrap{position:relative;border-radius:var(--aira-radius-md);overflow:hidden;box-shadow:var(--aira-shadow-lg)}
+.gennote{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:var(--aira-sp-2);
+  padding:var(--aira-sp-2) var(--aira-sp-4);border-radius:var(--aira-radius-full);background:var(--aira-bg-elevated);
+  box-shadow:var(--aira-shadow-md);font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-secondary)}
+.gennote .spin{border-color:var(--aira-indigo-300);border-top-color:var(--aira-indigo-600)}
+.cropframe{position:absolute;border:1.5px solid #fff;box-shadow:0 0 0 9999px rgba(17,24,39,.45);
+  border-radius:2px;pointer-events:none;z-index:4}
+.cropframe .ch{position:absolute;width:12px;height:12px;border:2px solid #fff}
+.cropframe:not(.live) .tl{left:-2px;top:-2px;border-right:0;border-bottom:0}
+.cropframe:not(.live) .tr{right:-2px;top:-2px;border-left:0;border-bottom:0}
+.cropframe:not(.live) .bl{left:-2px;bottom:-2px;border-right:0;border-top:0}
+.cropframe:not(.live) .br{right:-2px;bottom:-2px;border-left:0;border-top:0}
+/* Freeform: draggable frame with grabbable knob handles on all eight points */
+.cropframe.live{pointer-events:auto;cursor:move}
+.cropframe.live .ch{width:14px;height:14px;border:0;background:#fff;border-radius:3px;
+  box-shadow:0 1px 3px rgba(0,0,0,.45);pointer-events:auto;z-index:5}
+.cropframe.live .tl{left:-7px;top:-7px;cursor:nwse-resize}
+.cropframe.live .tr{right:-7px;top:-7px;cursor:nesw-resize}
+.cropframe.live .bl{left:-7px;bottom:-7px;cursor:nesw-resize}
+.cropframe.live .br{right:-7px;bottom:-7px;cursor:nwse-resize}
+.cropframe.live .t{left:50%;top:-7px;transform:translateX(-50%);cursor:ns-resize}
+.cropframe.live .b{left:50%;bottom:-7px;transform:translateX(-50%);cursor:ns-resize}
+.cropframe.live .l{left:-7px;top:50%;transform:translateY(-50%);cursor:ew-resize}
+.cropframe.live .r{right:-7px;top:50%;transform:translateY(-50%);cursor:ew-resize}
+/* A floating bar with both edges pinned can never overflow its band: max-width caps it
+   and the auto margins centre whatever is left. */
+.tools{position:absolute;left:var(--aira-sp-4);right:var(--aira-sp-4);bottom:var(--aira-sp-4);
+  width:max-content;max-width:calc(100% - var(--aira-sp-8));margin-inline:auto;
+  display:flex;align-items:center;gap:var(--aira-sp-2);padding:var(--aira-sp-1);
+  background:var(--aira-bg-elevated);border:1px solid var(--aira-border-default);
+  border-radius:var(--aira-radius-md);box-shadow:var(--aira-shadow-lg);z-index:var(--z-canvas)}
+.tbtn{width:32px;height:32px;flex:none;border-radius:var(--aira-radius-md);display:flex;align-items:center;
+  justify-content:center;border:0;background:none;cursor:pointer;padding:0;color:var(--aira-text-secondary)}
+.tbtn:hover{background:var(--aira-bg-hover)}
+.tbtn[disabled]{opacity:.35;cursor:default}
+.tool{display:flex;flex:none;white-space:nowrap;align-items:center;gap:var(--aira-sp-2);height:32px;
+  padding:0 var(--aira-sp-3);border-radius:var(--aira-radius-md);font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;
+  background:transparent;color:var(--aira-text-secondary);border:0;cursor:pointer}
+.tool:hover{background:var(--aira-bg-hover)}
+.tool.on{background:var(--aira-bg-selected);color:var(--aira-indigo-600)}
+.vdiv{width:1px;height:20px;background:var(--aira-border-default);flex:none}
+.zoom{font:500 12px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-secondary);min-width:40px;text-align:center;flex:none}
+/* Condense rather than widen or clip, per the standing overflow rule. */
+@container (max-width:559px){
+  .tool{width:32px;padding:0;justify-content:center}
+  .tool .tlabel{display:none}
+}
+.hint{position:absolute;left:var(--aira-sp-4);right:var(--aira-sp-4);top:var(--aira-sp-4);width:max-content;
+  max-width:calc(100% - var(--aira-sp-8));margin-inline:auto;z-index:var(--z-canvas);display:flex;
+  align-items:center;gap:var(--aira-sp-2);height:32px;padding:0 var(--aira-sp-4);
+  border-radius:var(--aira-radius-full);background:rgba(17,24,39,.86);color:#fff;
+  font:500 13px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;pointer-events:none}
+
+/* ---------- drawers ---------- */
+aside.drawer{flex:none;width:320px;min-width:320px;height:100%;background:var(--aira-bg-elevated);
+  border-left:1px solid var(--aira-border-default);display:flex;flex-direction:column;z-index:var(--z-drawer)}
+.dhead{padding:var(--aira-sp-4) var(--aira-sp-4) var(--aira-sp-3);display:flex;align-items:center;
+  justify-content:space-between;gap:var(--aira-sp-3)}
+.dhead h3{margin:0;font:600 16px/24px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.dbody{flex:1;min-height:0;overflow:auto;position:relative;
+  padding:var(--aira-sp-4) var(--aira-sp-4) var(--aira-sp-6)}
+.dfoot{padding:var(--aira-sp-4);border-top:1px solid var(--aira-border-default);display:flex;gap:var(--aira-sp-2)}
+.btn{height:36px;padding:0 var(--aira-sp-4);border-radius:var(--aira-radius-md);font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:var(--aira-sp-2);cursor:pointer;
+  border:1px solid transparent;white-space:nowrap}
+.btn.primary{background:var(--aira-bg-brand);color:#fff;flex:1}
+.btn.primary:hover{background:#2C30B4}
+.btn.primary[disabled]{background:var(--aira-bg-muted);color:var(--aira-text-disabled);cursor:default}
+.btn.secondary{background:var(--aira-bg-elevated);border-color:var(--aira-border-default);color:var(--aira-text-primary)}
+.btn.secondary:hover{background:var(--aira-bg-hover)}
+.btn.tertiary{background:transparent;color:var(--aira-text-secondary);border-color:transparent}
+.btn.tertiary:hover{background:var(--aira-bg-hover)}
+.btn.lg{height:44px;padding:0 var(--aira-sp-5);font:500 15px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif}
+.btn.pillchip{height:44px;padding:0 var(--aira-sp-4);border-radius:var(--aira-radius-full);
+  border-color:var(--aira-border-default);background:var(--aira-bg-elevated);color:var(--aira-label-ink);
+  font:500 15px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif}
+.btn.pillchip:hover{background:var(--aira-bg-hover)}
+.lbl{font:500 11px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;text-transform:uppercase;color:var(--aira-text-tertiary)}
+.fieldlbl{font:500 12px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-secondary)}
+.input{height:36px;border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-md);
+  padding:0 var(--aira-sp-3);font:400 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);width:100%;
+  background:var(--aira-bg-elevated)}
+.input::placeholder{color:var(--aira-text-placeholder)}
+.exrow{display:flex;align-items:center;gap:var(--aira-sp-3);padding:var(--aira-sp-2) 0;
+  border-radius:var(--aira-radius-md);border-bottom:1px solid var(--aira-bg-muted)}
+.exrow .nm{font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exrow .sz{font:400 13px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)}
+.exrow.quiet .nm{color:var(--aira-text-tertiary)}
+.xbtn{flex:none;width:32px;height:32px;border-radius:var(--aira-radius-md);display:flex;align-items:center;
+  justify-content:center;border:0;background:none;cursor:pointer;color:var(--aira-text-secondary);opacity:0}
+.exrow:hover .xbtn,.xbtn:focus-visible{opacity:1}
+.tplgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--aira-sp-2);padding-bottom:var(--aira-sp-2)}
+.tpl{border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-md);background:var(--aira-bg-elevated);
+  padding:var(--aira-sp-3) var(--aira-sp-2);display:flex;flex-direction:column;align-items:center;
+  gap:var(--aira-sp-1);cursor:pointer}
+.tpl:hover{background:var(--aira-bg-hover)}
+.tpl.on{border-color:var(--aira-border-brand);background:var(--aira-bg-selected)}
+.tpl .tn{font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);text-align:center}
+.tpl .ts{font:400 12px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)}
+.grouphd{display:flex;align-items:center;justify-content:space-between;width:100%;
+  padding:var(--aira-sp-2) 0;border:0;background:none;cursor:pointer}
+
+/* ---------- gallery ---------- */
+.gallery{position:absolute;inset:0;background:var(--aira-bg-surface-alt);z-index:var(--z-overlay);
+  display:flex;flex-direction:column}
+.gallhead{display:flex;align-items:center;gap:var(--aira-sp-3);padding:var(--aira-sp-4) var(--aira-sp-6);
+  border-bottom:1px solid var(--aira-border-default);background:var(--aira-bg-elevated)}
+.gallgrid{flex:1;overflow:auto;padding:var(--aira-sp-6) var(--aira-sp-6) var(--aira-sp-8);display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:var(--aira-sp-4);align-content:start}
+.gcard{position:relative;display:flex;flex-direction:column;border:0;border-radius:var(--aira-radius-lg);
+  background:none;padding:0;text-align:left}
+.gthumb{position:relative;border-radius:var(--aira-radius-md);overflow:hidden;background:var(--aira-bg-canvas);
+  cursor:pointer;border:1px solid var(--aira-border-default);transition:transform var(--aira-motion-fast)}
+.gthumb .gpic{aspect-ratio:1;display:flex;align-items:center;justify-content:center;line-height:0}
+.gcard.sel .gthumb{transform:scale(.9);border-color:var(--aira-border-brand);box-shadow:0 0 0 2px var(--aira-border-brand)}
+/* Google-Photos-style select circle: top-left, appears on hover, always shown once anything is selected */
+.gcheck{position:absolute;right:var(--aira-sp-2);top:var(--aira-sp-2);width:24px;height:24px;border-radius:var(--aira-radius-full);
+  border:0;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;
+  transition:opacity var(--aira-motion-fast);z-index:2;background:rgba(17,24,39,.28)}
+.gcheck::before{content:"";position:absolute;inset:0;border-radius:var(--aira-radius-full);border:2px solid #fff}
+.gthumb:hover .gcheck,.gallery.selecting .gcheck,.gcard.sel .gcheck{opacity:1}
+.gcheck.on{background:var(--aira-bg-brand)}
+.gcheck.on::before{border-color:var(--aira-bg-brand)}
+.gcap{padding:var(--aira-sp-2) var(--aira-sp-1) 0;min-width:0}
+.gname{font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gmeta{font:400 13px/18px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emptyblk{min-height:280px;grid-column:1/-1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:var(--aira-sp-3);text-align:center}
+
+/* ---------- concept picker: same track pattern, so neither card can be clipped ---------- */
+.pickwrap{position:absolute;inset:0;overflow:auto;display:block}
+.picktrack{min-width:100%;min-height:100%;width:max-content;height:max-content;display:flex;
+  align-items:center;justify-content:center;padding:var(--aira-sp-6)}
+.pcard{width:280px;flex:none;border:2px solid var(--aira-border-default);border-radius:var(--aira-radius-lg);
+  overflow:hidden;background:var(--aira-bg-elevated);padding:0;line-height:0;cursor:pointer;display:block}
+.pcard:hover,.pcard:focus-visible{border-color:var(--aira-border-brand);box-shadow:var(--aira-shadow-lg)}
+
+/* ---------- misc ---------- */
+.toast{position:absolute;left:var(--aira-sp-4);right:var(--aira-sp-4);bottom:76px;width:max-content;
+  max-width:calc(100% - var(--aira-sp-8));margin-inline:auto;z-index:var(--z-toast);display:flex;
+  align-items:center;gap:var(--aira-sp-3);min-height:44px;padding:0 var(--aira-sp-3) 0 var(--aira-sp-4);
+  border-radius:var(--aira-radius-md);background:var(--aira-bg-elevated);border:1px solid var(--aira-border-default);
+  box-shadow:var(--aira-shadow-lg);font:500 14px/20px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)}
+.skel{background:linear-gradient(100deg,var(--aira-bg-muted) 25%,var(--aira-border-default) 37%,var(--aira-bg-muted) 63%);
+  background-size:400% 100%;animation:shim 1.6s ease-in-out infinite;border-radius:var(--aira-radius-md)}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.spin{width:14px;height:14px;flex:none;border-radius:var(--aira-radius-full);
+  border:2px solid currentColor;border-top-color:transparent;animation:sp .8s linear infinite;opacity:.9}
+@keyframes sp{to{transform:rotate(360deg)}}
+.areabox{position:absolute;border:2px solid var(--aira-indigo-400);background:rgba(98,104,255,.12);
+  border-radius:var(--aira-radius-sm)}
+.areabox.dim{border-color:rgba(98,104,255,.65);background:rgba(98,104,255,.06)}
+.areabox.live{border-style:dashed;background:rgba(98,104,255,.18)}
+.areanum{position:absolute;min-width:20px;height:20px;padding:0 var(--aira-sp-1);
+  border-radius:var(--aira-radius-sm) 0 var(--aira-radius-md) 0;background:var(--aira-bg-brand);color:#fff;
+  display:flex;align-items:center;justify-content:center;font:500 12px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif}
+.areahit{position:absolute;border-radius:var(--aira-radius-sm)}
+.areax{position:absolute;width:32px;height:32px;border-radius:var(--aira-radius-full);
+  background:rgba(17,24,39,.78);color:#fff;display:none;align-items:center;justify-content:center;
+  border:0;cursor:pointer;padding:0}
+.areahit:hover .areax,.areax:focus-visible{display:flex}
+.livesize{position:absolute;padding:var(--aira-sp-1) var(--aira-sp-2);border-radius:var(--aira-radius-sm);
+  background:rgba(17,24,39,.86);color:#fff;font:500 12px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;white-space:nowrap;pointer-events:none}
+.chip{position:relative;flex:none;width:84px;height:64px;border-radius:var(--aira-radius-md);overflow:hidden;
+  border:1px solid var(--aira-border-default);background:var(--aira-bg-canvas);
+  display:flex;align-items:center;justify-content:center}
+.chipnum{position:absolute;left:var(--aira-sp-2);bottom:var(--aira-sp-2);height:20px;min-width:20px;
+  padding:0 var(--aira-sp-1);border-radius:var(--aira-radius-sm);background:var(--aira-bg-brand);color:#fff;
+  display:flex;align-items:center;justify-content:center;font:500 11px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif}
+.chipx{position:absolute;right:var(--aira-sp-1);top:var(--aira-sp-1);width:32px;height:32px;
+  border-radius:var(--aira-radius-full);background:rgba(17,24,39,.78);color:#fff;display:none;
+  align-items:center;justify-content:center;border:0;cursor:pointer;padding:0}
+.chip:hover .chipx,.chipx:focus-visible{display:flex}
+.dropdown{position:absolute;z-index:var(--z-menu);background:var(--aira-bg-elevated);
+  border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-lg);
+  box-shadow:var(--aira-shadow-lg);overflow-y:auto;max-height:280px;padding:var(--aira-sp-1)}
+.ddrow{display:flex;align-items:center;justify-content:space-between;gap:var(--aira-sp-3);
+  padding:var(--aira-sp-2) var(--aira-sp-3);border-radius:var(--aira-radius-md);width:100%;border:0;
+  background:none;cursor:pointer;font:400 14px/22px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary);text-align:left}
+.ddrow:hover{background:var(--aira-bg-hover)}
+.ddrow.on{background:var(--aira-bg-selected);color:var(--aira-indigo-600)}
+
+/* ---------- md and below: rail nav, one panel ---------- */
+/* Tablet / a retina-fullscreen artifact (~960 CSS px): keep BOTH columns — just force the host
+   rail to its icon width so chat + panel + drawer still fit. The panel must never vanish here. */
+@media (max-width:1023px){
+  .nav{width:72px}
+  .nav .navlogo{display:none}
+  .nav .navtop{justify-content:center;padding:0}
+  .nav .navitem{justify-content:center;padding:0;gap:0}
+  .nav .navitem .nlbl,.nav .navchev,.nav .navsub{display:none}
+  .chat.narrow{min-width:0;width:clamp(300px,calc(100% - 392px),480px)}
+}
+/* Phone: one panel at a time — the artifact panel replaces the chat, close returns to it. */
+@media (max-width:767px){
+  .nav{position:absolute;top:0;bottom:0;left:0;z-index:var(--z-overlay);transform:translateX(-100%);
+    transition:transform var(--motion-base)}
+  .nav.open{transform:none;width:280px}
+  .nav.open .navlogo,.nav.open .navitem .nlbl,.nav.open .navsub{display:revert}
+  .chat.narrow{width:auto;flex:1;min-width:0;border-right:0}
+  .panel{display:none}
+  .cols.showpanel .chat{display:none}
+  .cols.showpanel .panel{display:flex}
+  aside.drawer{position:absolute;left:0;right:0;bottom:0;top:auto;width:auto;min-width:0;height:auto;
+    max-height:70%;border-left:0;border-top:1px solid var(--aira-border-default);
+    border-radius:var(--aira-radius-lg) var(--aira-radius-lg) 0 0;box-shadow:var(--aira-shadow-lg)}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+/* ===================== helpers ===================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* lucide defaults: size 20, strokeWidth 1.5, currentColor */
+const ic = (d, o) => { o = o || {};
+  return `<svg width="${o.s||20}" height="${o.s||20}" viewBox="0 0 24 24" fill="none" stroke="${o.c||'currentColor'}"
+    stroke-width="${o.w||1.5}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none">${d}</svg>`; };
+const I = {
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  spark:'<path d="M12 3l1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4z"/><path d="M19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/>',
+  tag:'<path d="M12.6 3H20a1 1 0 0 1 1 1v7.4a2 2 0 0 1-.6 1.4l-7.6 7.6a2 2 0 0 1-2.8 0l-6.4-6.4a2 2 0 0 1 0-2.8l7.6-7.6A2 2 0 0 1 12.6 3Z"/><circle cx="16.5" cy="7.5" r="1.2"/>',
+  mega:'<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M15 8.5a4 4 0 0 1 0 7"/><path d="M18 6a7 7 0 0 1 0 12"/>',
+  layout:'<rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="14" width="8" height="6" rx="1.5"/>',
+  gift:'<rect x="3" y="8" width="18" height="13" rx="1.5"/><path d="M3 12h18M12 8v13"/><path d="M8.5 8a2.5 2.5 0 0 1 0-5C10.5 3 12 8 12 8s1.5-5 3.5-5a2.5 2.5 0 0 1 0 5"/>',
+  users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.2a3.2 3.2 0 0 1 0 6.1"/><path d="M17.5 14.2A5.5 5.5 0 0 1 21 19.5"/>',
+  channels:'<circle cx="12" cy="12" r="2.2"/><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="M10.2 10.6 6.6 7.4M13.8 10.6l3.6-3.2M10.2 13.4l-3.6 3.2M13.8 13.4l3.6 3.2"/>',
+  care:'<circle cx="12" cy="9" r="3.2"/><path d="M5 21a7 7 0 0 1 14 0"/><path d="M3.5 11a8.5 8.5 0 0 1 17 0"/>',
+  chart:'<path d="M4 20V4"/><path d="M4 20h16"/><rect x="7.5" y="12" width="3" height="5" rx="1"/><rect x="13.5" y="8" width="3" height="9" rx="1"/>',
+  data:'<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
+  code:'<path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/>',
+  cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/>',
+  panelLeft:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
+  msg:'<path d="M21 12a8 8 0 0 1-8 8H8l-4 2.5V12a8 8 0 0 1 16 0Z"/>',
+  chevD:'<path d="M6 9l6 6 6-6"/>', chevU:'<path d="M6 15l6-6 6 6"/>',
+  chevL:'<path d="M15 6l-6 6 6 6"/>', chevR:'<path d="M9 6l6 6-6 6"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>', plus:'<path d="M12 5v14M5 12h14"/>', minus:'<path d="M5 12h14"/>',
+  dl:'<path d="M12 3v13M7 11l5 5 5-5M4 21h16"/>',
+  copy:'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
+  img:'<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+  file:'<path d="M14 3v5h5"/><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z"/><path d="M9 13h6M9 17h4"/>',
+  book:'<path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z"/>',
+  crop:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
+  area:'<path d="M12.03 12.68a.5.5 0 0 1 .65-.65l9 3.5a.5.5 0 0 1 0 .95l-3.45 1.07a1 1 0 0 0-.66.66l-1.07 3.44a.5.5 0 0 1-.94.03z"/><path d="M5 3a2 2 0 0 0-2 2"/><path d="M19 3a2 2 0 0 1 2 2"/><path d="M5 21a2 2 0 0 1-2-2"/><path d="M9 3h1"/><path d="M9 21h2"/><path d="M14 3h1"/><path d="M3 9v1"/><path d="M21 9v2"/><path d="M3 14v1"/>',
+  undo:'<path d="M3 10h11a5 5 0 0 1 0 10H9M3 10l5-5M3 10l5 5"/>',
+  redo:'<path d="M21 10H10a5 5 0 0 0 0 10h5M21 10l-5-5M21 10l-5 5"/>',
+  fit:'<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  full:'<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>',
+  frame:'<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>',
+  link2:'<path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><path d="M8 12h8"/>',
+  unlink2:'<path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  warn:'<path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
+  link:'<path d="M21 12.5 12.6 21a4.6 4.6 0 0 1-6.5-6.5L14 6.5a3 3 0 0 1 4.3 4.3L10 19"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  up:'<path d="M12 19V6M6 11l6-6 6 6"/>', stop:'<rect x="6" y="6" width="12" height="12" rx="2"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>', skip:'<path d="M5 4l10 8-10 8z"/><path d="M19 4v16"/>',
+  minimise:'<path d="M5 12h14"/>',
+  tri:'<path d="M8 5l8 7-8 7z" fill="currentColor" stroke="none"/>',
+  triD:'<path d="M5 8l7 8 7-8z" fill="currentColor" stroke="none"/>',
+  share:'<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8 15.8 6.4M8.2 13.2l7.6 4.4"/>',
+};
+/* brand mark — the ONLY place the indigo-400 → sky-400 gradient is allowed */
+const MARK = s => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><defs>
+  <linearGradient id="mk${s}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6268FF"/><stop offset="1" stop-color="#3BA7FF"/></linearGradient></defs>
+  <path d="M12 2c.6 3.6 1.2 4.8 4.8 5.4C13.2 8 12.6 9.2 12 12.8 11.4 9.2 10.8 8 7.2 7.4 10.8 6.8 11.4 5.6 12 2Z" fill="url(#mk${s})"/>
+  <path d="M19 3c.3 1.7.6 2.2 2.2 2.5C19.6 5.8 19.3 6.3 19 8c-.3-1.7-.6-2.2-2.2-2.5C18.4 5.2 18.7 4.7 19 3Z" fill="url(#mk${s})"/>
+  <path d="M19 14c.3 1.7.6 2.2 2.2 2.5-1.6.3-1.9.8-2.2 2.5-.3-1.7-.6-2.2-2.2-2.5 1.6-.3 1.9-.8 2.2-2.5Z" fill="url(#mk${s})"/></svg>`;
+
+/* the generated creative, drawn from state so every thumbnail is the real image */
+let uid = 0;
+const PALETTE = {
+  warm:['#6B1420','#A6321F','#D98324'], cool:['#2B1B5E','#5B2E8F','#C06BC8'],
+  night:['#101A3A','#22346E','#E0A83C'], dusk:['#4A1330','#8A2D4E','#E08A3C'],
+};
+function creative(w, h, o) {
+  o = o || {}; h = h || w;
+  const p = PALETTE[o.tone || 'warm'], g = 'cr' + (++uid);
+  const u = Math.min(w, h) / 100;              // one unit = 1% of the short edge
+  const wide = w / h > 1.6;                    // banner-shaped: the model panel goes, type runs across
+  const r = (x, y, ww, hh, f, rad) =>
+    `<rect x="${x}" y="${y}" width="${Math.max(0, ww)}" height="${Math.max(0, hh)}" rx="${rad || 0}" fill="${f}"/>`;
+  const pad = 5 * u;
+  const bunt = Math.max(3, Math.round(w / (14 * u)));
+  const panelW = wide ? 0 : 0.3 * w, panelX = w - panelW - pad;
+  const cx = panelX + panelW / 2;
+  const txtW = (wide ? 0.56 : 0.62) * w - pad;
+  const cover = o.cover
+    ? `width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style="display:block;width:100%;height:100%"`
+    : `width="${w}" height="${h}" style="display:block"`;
+  return `<svg ${cover} viewBox="0 0 ${w} ${h}" aria-hidden="true">
+    <defs><linearGradient id="${g}" x1="0" y1="0" x2=".45" y2="1">
+      <stop offset="0" stop-color="${p[0]}"/><stop offset="1" stop-color="${p[1]}"/></linearGradient>
+      <radialGradient id="${g}g" cx="${wide ? .8 : .66}" cy=".4" r=".55">
+      <stop offset="0" stop-color="${p[2]}" stop-opacity=".5"/>
+      <stop offset="1" stop-color="${p[2]}" stop-opacity="0"/></radialGradient></defs>
+    ${r(0, 0, w, h, 'url(#' + g + ')')}
+    ${r(0, 0, w, h, 'url(#' + g + 'g)')}
+    ${r(0, 0, w, 0.9 * u, p[2])}
+    ${Array.from({length: bunt}, (_, i) => {
+      const x = (i + .5) * (w / bunt);
+      return `<circle cx="${x}" cy="${(i % 2 ? 4 : 2.6) * u}" r="${1.7 * u}" fill="${p[2]}" opacity=".9"/>`;
+    }).join('')}
+    ${panelW ? r(panelX, 0.16 * h, panelW, 0.72 * h, 'rgba(255,255,255,.13)', 2.4 * u) : ''}
+    ${panelW ? `<ellipse cx="${cx}" cy="${0.33 * h}" rx="${panelW * .29}" ry="${0.1 * h}" fill="rgba(255,255,255,.2)"/>
+      <ellipse cx="${cx}" cy="${0.58 * h}" rx="${panelW * .38}" ry="${0.15 * h}" fill="rgba(255,255,255,.15)"/>` : ''}
+    ${r(pad, 0.09 * h, Math.min(txtW, 30 * u), 7 * u, 'rgba(255,255,255,.93)', 1 * u)}
+    <text x="${pad + 2.6 * u}" y="${0.09 * h + 4.9 * u}" font-family="Roboto,sans-serif" font-weight="600"
+      font-size="${3.2 * u}" letter-spacing="${0.16 * u}" fill="${p[0]}">PANTALOONS</text>
+    ${r(pad, 0.52 * h, txtW, 4.4 * u, 'rgba(255,255,255,.92)', 0.8 * u)}
+    ${r(pad, 0.52 * h + 6.4 * u, txtW * .68, 3.4 * u, 'rgba(255,255,255,.6)', 0.8 * u)}
+    ${r(pad, 0.68 * h, Math.min(txtW, 34 * u), 11 * u, p[2], 1.6 * u)}
+    <text x="${pad + 3 * u}" y="${0.68 * h + 7.8 * u}" font-family="Roboto,sans-serif" font-weight="600"
+      font-size="${6.4 * u}" fill="${p[0]}">50% OFF</text>
+    ${r(pad, 0.86 * h, txtW * .52, 3 * u, 'rgba(255,255,255,.45)', 0.8 * u)}
+    ${r(pad, 0.92 * h, 22 * u, 5 * u, 'rgba(255,255,255,.9)', 2.5 * u)}
+  </svg>`;
+}
+/* contain-fit an image's real shape inside a box, so nothing is ever cropped */
+function fit(boxW, boxH, im) {
+  const a = (im && im.w ? im.w : 1) / (im && im.h ? im.h : 1);
+  let w = boxW, h = boxW / a;
+  if (h > boxH) { h = boxH; w = boxH * a; }
+  return {w: Math.round(w), h: Math.round(h)};
+}
+
+const TONES = ['warm','cool','night','dusk'];
+let imgSeq = 0;
+function mkImage(o) {
+  o = o || {};
+  imgSeq++;
+  return { id: 'im' + imgSeq, name: o.name || ('aira_gen_pantaloons_diwali_' + imgSeq + '.png'),
+    w: o.w || 1080, h: o.h || 1080, tone: o.tone || TONES[(imgSeq - 1) % 4], ver: o.ver || ('v' + imgSeq) };
+}
+const TPLS = [
+  {g:'Messaging channels', sub:'RCS', n:'Compact card', w:1440, h:480},
+  {g:'Messaging channels', sub:'RCS', n:'Standard card', w:1440, h:720},
+  {g:'Messaging channels', sub:'RCS', n:'Tall card', w:1440, h:1131},
+  {g:'Messaging channels', sub:'RCS', n:'Side-by-side card', w:768, h:1024},
+  {g:'Messaging channels', sub:'WhatsApp', n:'Square', w:1080, h:1080},
+  {g:'Messaging channels', sub:'WhatsApp', n:'Landscape', w:1080, h:566},
+  {g:'Social, web & email', sub:'', n:'Campaign poster', w:768, h:1024},
+  {g:'Social, web & email', sub:'', n:'Instagram post', w:1080, h:1350},
+  {g:'Social, web & email', sub:'', n:'Instagram story', w:1080, h:1920},
+  {g:'Social, web & email', sub:'', n:'Banner', w:1200, h:628},
+  {g:'Social, web & email', sub:'', n:'Landscape', w:1920, h:1080},
+  {g:'Social, web & email', sub:'', n:'Icon / logo', w:512, h:512},
+  {g:'Social, web & email', sub:'', n:'Email banner', w:600, h:300},
+];
+/* the card's options reuse the resize drawer's own template vocabulary */
+const PURPOSE = [
+  {k:'RCS', label:'RCS card', note:'4 shapes'},
+  {k:'WhatsApp', label:'WhatsApp', note:'2 shapes'},
+  {k:'Social', label:'Social post', note:'Instagram, banner'},
+  {k:'Email', label:'Email banner', note:'600 × 300 px'},
+];
+const PURPOSE_TPL = { RCS:'Standard card', WhatsApp:'Square', Social:'Instagram post', Email:'Email banner' };
+/* Only a CHANNEL or an explicit size counts as specified. A creative noun like "poster" or
+   "post" says nothing about the shape, which is the one thing aiRA cannot fix with a later edit. */
+const FORMAT_WORDS = ['rcs','whatsapp','instagram','insta','story','stories','email banner','square',
+  'landscape','icon','logo','9:16','1:1','16:9','4:5','1080','1440','1200','768','600','512','px'];
+
+const MAX_PX = 3840, MIN_PX = 320;
+const LADDER = [10, 25, 50, 75, 100, 150, 200];
+const BRIEF_HINT = 'Generate a Diwali sale creative for Pantaloons — flat 50% off, festive, model in ethnic wear';
+
+/* ===================== state ===================== */
+const S = {};
+function reset() {
+  Object.assign(S, {
+    view: 'home',            // home | chat
+    stage: null,             // null | picker | editor   — the one source of truth for the right panel
+    msgs: [], draft: '', busy: false, regen: false, genCount: 0, concepts: [], pending: null,
+    card: null,              // {q:'purpose'|'shape', group, resolved, typed}
+    needFormat: false,       // the question is open (card closed without answering)
+    fmtChoice: null,         // the resolved template name
+    images: [], active: 0, page: 0, stripOpen: true,
+    panel: null,             // resize | export
+    rzNoteX: false,          // the resize note banner was dismissed; resets on any size change
+    tool: null, areas: [], areaSeq: 0, sent: false,
+    fmtOpen: false, fmt: 'PNG', exName: 'pantaloons-diwali',
+    exList: [], exBusy: false, exError: false, exPartial: null,
+    rzSearch: '', rzPick: null, rzW: 1080, rzH: 1080, rzBusy: false, rzFail: false,
+    rzOpen: {'Messaging channels': 1, 'RCS': 1, 'WhatsApp': 1, 'Social, web & email': 0}, crop: null,
+    rzLock: false, rzLockR: 1, copied: false,
+    gallery: false, gallSel: [], preview: false, zoomPct: 40, refit: true,
+    toast: null, toastId: 0, history: [], navOpen: true, navCollapsed: null,
+    railOpen: {Progress: 1, Folder: 1, Context: 1},
+    focusAfter: null, listScroll: 0, tmr: null, tmrKind: null, stick: true,
+  });
+}
+reset();
+
+/* one owner for every timer, so a cancelled action can never report success later */
+function later(kind, ms, fn) {
+  clearLater(); S.tmrKind = kind;
+  S.tmr = setTimeout(() => { if (S.tmrKind !== kind) return; S.tmr = null; S.tmrKind = null; fn(); }, ms);
+}
+function clearLater() { if (S.tmr) clearTimeout(S.tmr); S.tmr = null; S.tmrKind = null; }
+function toast(text) {
+  S.toast = text; const id = ++S.toastId;
+  setTimeout(() => { if (S.toastId === id && S.toast === text) { S.toast = null; render(); } }, 4200);
+}
+function imgOf(i) { return S.images[i] || S.images[0]; }
+function snapshot() { S.history.push({images: S.images.map(x => Object.assign({}, x)), active: S.active}); }
+function say(x) { S.msgs.push({t: 'a', x: x}); }
+function listOf(ns) { return ns.length < 2 ? String(ns[0] || '')
+  : ns.slice(0, -1).join(', ') + ' and ' + ns[ns.length - 1]; }
+function tool(x) { S.msgs.push({t: 'tool', x: x}); }
+
+/* ===================== host navigation ===================== */
+const NAV = [
+  ['Home', I.home], ['aiRA', I.spark, ['New chat', 'Apps', 'Settings']], ['Loyalty', I.tag],
+  ['Engage', I.mega], ['Experiences', I.layout], ['Rewards', I.gift], ['Audiences', I.users],
+  ['Channels', I.channels], ['Member care', I.care], ['Insights', I.chart], '-',
+  ['Data Management', I.data], ['Extensions', I.code], '-', ['Settings', I.cog],
+];
+function navHTML() {
+  const auto = !!S.stage && window.innerWidth < 1600;
+  const icons = S.navCollapsed === null ? auto : S.navCollapsed;
+  let out = `<div class="navtop"><span class="navlogo">${MARK(20)}capillary</span>
+    <span style="flex:1"></span>
+    <button class="iconbtn navtoggle" data-act="nav-toggle" aria-label="${icons ? 'Expand navigation' : 'Collapse navigation'}" style="color:var(--cap-nav-ink-dim)">${ic(I.panelLeft, {s: 20})}</button></div>`;
+  NAV.forEach(n => {
+    if (n === '-') { out += '<div class="navrule"></div>'; return; }
+    const on = n[0] === 'aiRA';
+    out += `<button class="navitem${on ? ' on' : ''}" data-act="noop">${ic(n[1], {s: 20})}<span class="nlbl">${esc(n[0])}</span>
+      ${n[2] ? ic(S.navOpen ? I.chevD : I.chevR, {s: 20}) : ''}</button>`;
+    if (n[2] && S.navOpen) out += `<div class="navsub" style="position:relative"><span class="navsubline"></span>` +
+      n[2].map((s, i) => `<button class="navitem${i === 0 ? ' on' : ''}" data-act="noop"><span class="nlbl">${esc(s)}</span></button>`).join('') + `</div>`;
+  });
+  return `<nav class="nav${icons ? ' icons' : ''}" aria-label="Capillary">${out}</nav>`;
+}
+function topbarHTML() {
+  return `<div class="topbar">
+    <button class="space" data-act="noop">DemoSpace ${ic(I.chevD, {s: 20, c: '#6B7785'})}</button>
+    <span style="flex:1"></span>
+    <button class="sessions" data-act="noop">${ic(I.msg, {s: 20, c: '#364152'})}Sessions</button>
+    <span class="tbsep"></span>
+    <button class="me" data-act="noop" aria-label="Your account">A</button>
+  </div>`;
+}
+
+/* ===================== chat ===================== */
+function chipHTML(a, closable) {
+  const s = Math.min(84 / a.w, 64 / a.h);
+  const im = a.img ? (S.images.find(x => x.id === a.img) || imgOf(S.active)) : imgOf(S.active);
+  return `<div class="chip" title="Area ${a.n} · ${a.px}">
+    <div style="position:absolute;left:${-a.x * s + (84 - a.w * s) / 2}px;top:${-a.y * s + (64 - a.h * s) / 2}px">${creative(420 * s, im)}</div>
+    <span class="chipnum">${a.n}</span>
+    ${closable ? `<button class="chipx" data-act="area-del" data-n="${a.n}" aria-label="Remove area ${a.n}">${ic(I.x, {s: 16, c: '#fff', w: 2.6})}</button>` : ''}</div>`;
+}
+function nudgesFor() {
+  if (S.busy || S.regen || S.card) return [];
+  /* Three action-oriented edits, only once a creative exists. No nudges at the picker — it is a
+     choice, not an answer — and never a 'two more', because two concepts come from the first
+     prompt alone. Resize and Export are omitted: they are already buttons on the panel. */
+  if (S.stage === 'editor' && S.images.length)
+    return ['Make the headline bigger', 'Swap the offer to 40%', 'Warm up the background'];
+  return [];
+}
+function threadHTML() {
+  const rows = S.msgs.map(m => {
+    if (m.t === 'u') return `<div class="umsg">${m.chips && m.chips.length
+      ? `<div style="display:flex;gap:8px;flex-wrap:wrap;${m.x ? 'margin-bottom:10px' : ''}">${m.chips.map(a => chipHTML(a, false)).join('')}</div>` : ''}${m.x ? esc(m.x) : ''}</div>`;
+    if (m.t === 'a') return `<div class="amsg">${esc(m.x)}</div>`;
+    if (m.t === 'list') return `<div><div class="amsg">${esc(m.x)}</div><ul class="alist">${m.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div>`;
+    if (m.t === 'tool') return `<div class="toolblk"><span class="tri">${ic(I.tri, {s: 16, c: '#6B7785'})}</span><span>${esc(m.x)}</span></div>`;
+    if (m.t === 'card') return `<button class="artcard" data-act="open-art" data-id="${esc(m.img)}">
+        <span class="ai">${ic(I.img, {s: 20, c: '#3438C9'})}</span>
+        <span style="flex:1;min-width:0"><span class="at" style="display:block">${esc(m.title)}</span>
+        <span class="av" style="display:block">${esc(m.ver)} &#183; open in the panel</span></span>${ic(I.chevR, {s: 20, c: '#6B7785'})}</button>`;
+    if (m.t === 'banner') return `<div class="banner${m.danger ? ' danger' : ''}">${ic(I.warn, {s: 20, c: m.danger ? '#B11E1E' : '#9A5B00'})}
+        <div style="flex:1"><div class="bt">${esc(m.title)}</div><div class="bb">${esc(m.body)}</div>
+        ${m.action ? `<button class="btn secondary" style="margin-top:12px" data-act="retry">${esc(m.action)}</button>` : ''}</div></div>`;
+    if (m.t === 'skel') return `<div class="skel" style="height:${m.h || 64}px;border-radius:10px"></div>`;
+    return '';
+  });
+  const nd = nudgesFor();
+  if (nd.length) rows.push(`<div class="nudges">${nd.map(n =>
+    `<button class="nudge" data-act="nudge" data-x="${esc(n)}">${esc(n)}</button>`).join('')}</div>`);
+  /* one .turn per user message: aiRA's reply blocks group at 12px, turns sit apart at 24px */
+  const groups = [];
+  S.msgs.forEach((m, i) => { if (m.t === 'u' || !groups.length) groups.push([]); groups[groups.length - 1].push(rows[i]); });
+  if (rows.length > S.msgs.length) groups[groups.length - 1].push(rows[rows.length - 1]);
+  return groups.map(g => `<div class="turn">${g.join('')}</div>`).join('');
+}
+
+/* the clarification card — pinned directly above the composer, exactly as wide */
+function cardHTML() {
+  const c = S.card; if (!c) return '';
+  const rcs = TPLS.filter(t => t.sub === 'RCS');
+  const body = c.q === 'purpose'
+    ? `<div class="qopts">${PURPOSE.map(p => `<button class="qopt" data-act="q-purpose" data-k="${p.k}">
+          <span>${esc(p.label)}</span><span class="qsz">${esc(p.note)}</span></button>`).join('')}</div>`
+    : `<div class="qopts">${rcs.map(t => `<button class="qopt" data-act="q-shape" data-n="${esc(t.n)}">
+          <span style="display:flex;align-items:center;gap:12px">${tplIcon(t.w, t.h)}${esc(t.n)}</span>
+          <span class="qsz">${t.w} &#215; ${t.h} px</span></button>`).join('')}</div>`;
+  return `<div class="cardwrap"><div class="qcard" role="group" aria-label="aiRA needs one detail">
+    <div class="qhead">
+      <span class="qtitle">${c.q === 'purpose' ? 'What’s this image for?' : 'Which RCS card?'}</span>
+      <button class="iconbtn" data-act="q-min" aria-label="Minimise" style="width:32px;height:32px">${ic(I.minimise, {s: 20, c: '#6B7785'})}</button>
+      <button class="iconbtn" data-act="q-close" aria-label="Close without answering" style="width:32px;height:32px">${ic(I.x, {s: 20, c: '#6B7785'})}</button>
+    </div>
+    ${c.resolved ? `<div class="qresolved">${ic(I.check, {s: 16, c: '#3438C9', w: 2})}${esc(c.resolved)}</div>` : ''}
+    ${body}
+    <div class="qtyped">${ic(I.search, {s: 20, c: '#9AA4B2'})}
+      <input id="qtyped" value="${esc(c.typed || '')}" placeholder="Or type a size, like 1080 &#215; 1350" aria-label="Type a size or channel">
+      <button class="btn tertiary" data-act="q-typed" style="height:32px">Use</button></div>
+    <div class="qfoot"><span class="sp"></span>
+      <button class="btn tertiary" data-act="q-skip">Skip &mdash; you pick</button></div>
+  </div></div>`;
+}
+function composerHTML(ph) {
+  const hot = !!(S.draft || (S.areas.length && !S.sent));
+  const chips = S.areas.length && !S.sent;
+  return `<div class="cbox${chips ? '' : ' pill'}">
+    ${chips ? `<div class="cchips">${S.areas.map(a => chipHTML(a, true)).join('')}</div>` : ''}
+    <div class="crow">
+      <button class="iconbtn" data-act="noop" aria-label="Add an attachment">${ic(I.plus, {s: 20, c: '#4D5867'})}</button>
+      <input class="cinput" id="composer" value="${esc(S.draft)}" placeholder="${esc(ph)}" aria-label="Message aiRA">
+      <button class="iconbtn" data-act="noop" aria-label="Dictate">${ic(I.mic, {s: 20, c: '#4D5867'})}</button>
+      ${S.busy || S.regen || S.rzBusy
+        ? `<button class="send on" data-act="stop-gen" aria-label="Stop generating">${ic(I.stop, {s: 16, c: '#fff', w: 2})}</button>`
+        : `<button class="send${hot ? ' on' : ''}" data-act="send" aria-label="Send">${ic(I.up, {s: 20, c: hot ? '#fff' : '#9AA4B2', w: 1.9})}</button>`}
+    </div></div>`;
+}
+const START = [['Pick a starting point', I.chart], ['Program health', I.tag], ['Trend analysis', I.tag]];
+function homeHTML() {
+  return `<div class="home"><div class="homeinner">
+    <div style="display:flex;justify-content:center;margin-bottom:18px">${MARK(40)}</div>
+    <div class="greet">Good afternoon, Ann</div>
+    <div class="sub">Ask, build, test, and learn about your customers &mdash; all in one place.</div>
+    <div style="margin-top:26px;text-align:left">${composerHTML('What’s our mission today?')}</div>
+    <div class="startchips">${START.map(c => `<button class="btn pillchip" data-act="nudge" data-x="${esc(c[0])}">
+      ${ic(c[1], {s: 20, c: '#3438C9'})}${esc(c[0])}</button>`).join('')}</div>
+  </div></div>`;
+}
+function railHTML() {
+  const built = S.images.length || S.busy;
+  const secs = [
+    ['Progress', S.busy ? 'Generating the creative' : built ? 'Generate creative · done' : 'No tasks yet'],
+    ['Folder', built ? 'pantaloons_diwali.png' : 'No files in this session yet', 'Working folder'],
+    ['Context', null, 'Context'],
+  ];
+  return `<div class="rail"><div class="railcard">
+    ${secs.map(s => `<div class="railsec">
+      <button class="rl" data-act="rail" data-g="${s[0]}">${esc(s[2] || s[0])} ${ic(S.railOpen[s[0]] ? I.chevD : I.chevR, {s: 20, c: '#6B7785'})}</button>
+      ${!S.railOpen[s[0]] ? '' : s[0] === 'Context'
+        ? `<div class="rk">Playbooks</div><div class="railrow">${ic(I.book, {s: 20, c: '#6B7785'})}image_generation</div>`
+        : `<div class="rv">${esc(s[1])}</div>`}
+    </div>`).join('')}
+  </div></div>`;
+}
+
+/* ===================== editor ===================== */
+function cropOverlay(w, h) {
+  if (S.panel !== 'resize' || S.rzBusy) return '';
+  if (S.rzPick && !rzCheck().crop) return '';             // a template the pixels can't reach: generate only
+  // One interactive crop rectangle for BOTH Freeform and templates: drag the body to move it over
+  // any part of the image, pull a handle to resize. Templates keep their aspect ratio locked.
+  const c = S.crop || {fx: 0, fy: 0, fw: 1, fh: 1};
+  const x = c.fx * w, y = c.fy * h, cw = c.fw * w, ch = c.fh * h;
+  const H = ['tl', 't', 'tr', 'l', 'r', 'bl', 'b', 'br'];
+  return `<div class="cropframe live" id="cropframe" style="left:${x}px;top:${y}px;width:${cw}px;height:${ch}px">
+    ${H.map(h => `<span class="ch ${h}" data-h="${h}"></span>`).join('')}</div>`;
+}
+function creativeBox(w, h, o) {
+  return `<div class="imgshadow" id="imgsq" style="width:${w}px;height:${h}px">
+    ${creative(w, h, o)}${areaOverlay(w, h)}${cropOverlay(w, h)}</div>`;
+}
+function areaOverlay(bw, bh) {
+  const dim = S.sent;
+  return S.areas.map(a => {
+    const x = a.fx * bw, y = a.fy * bh, w = a.fw * bw, h = a.fh * bh;
+    return `<div class="areabox${dim ? ' dim' : ''}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"></div>
+      <div class="areanum" style="left:${x}px;top:${y}px">${a.n}</div>
+      ${dim ? '' : `<div class="areahit" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">
+        <button class="areax" data-act="area-del" data-n="${a.n}" style="right:4px;top:4px" aria-label="Remove area ${a.n}">${ic(I.x, {s: 16, c: '#fff', w: 2.6})}</button></div>`}`;
+  }).join('') + `<div id="livebox" class="areabox live" style="display:none"></div><div id="livesize" class="livesize" style="display:none"></div>`;
+}
+function stripHTML() {
+  if (!S.images.length) return '';
+  if (!S.stripOpen) return `<div class="strip"><button class="hidebtn" data-act="strip-toggle">
+      <span>Show images</span>${ic(I.chevD, {s: 20, c: '#4D5867'})}</button>
+    <div class="striptools"><button class="gallbtn" data-act="gallery-open">${ic(I.img, {s: 20})}Open gallery</button></div></div>`;
+  const per = 10, pages = Math.max(1, Math.ceil(S.images.length / per));
+  const page = Math.max(0, Math.min(S.page, pages - 1));
+  const slice = S.images.slice(page * per, page * per + per);
+  const more = S.images.length - slice.length;
+  const sel = i => S.gallSel.includes(i), selecting = S.gallSel.length > 0;
+  return `<div class="strip${selecting ? ' selecting' : ''}"><button class="hidebtn" data-act="strip-toggle">
+      <span>Hide images</span>${ic(I.chevU, {s: 20, c: '#4D5867'})}</button>
+    ${pages > 1 ? `<button class="chev" data-act="page-prev" aria-label="Previous ten images" ${page === 0 ? 'disabled' : ''}>${ic(I.chevL, {s: 16})}</button>` : ''}
+    <div class="thumbs">${slice.map(im => { const i = S.images.indexOf(im);
+      return `<div class="tcell${sel(i) ? ' sel' : ''}">
+        <button class="thumb${i === S.active ? ' on' : ''}" data-act="pick" data-i="${i}" title="${esc(im.name)}"
+          aria-label="Open ${esc(im.name)}" aria-pressed="${i === S.active}">${creative(im.w, im.h, {tone: im.tone, cover: true})}</button>
+        <button class="tcheck${sel(i) ? ' on' : ''}" data-act="gall-toggle" data-i="${i}"
+          aria-label="${sel(i) ? 'Deselect' : 'Select'} ${esc(im.name)}" aria-pressed="${sel(i)}">${sel(i) ? ic(I.check, {s: 12, c: '#fff', w: 3}) : ''}</button>
+      </div>`; }).join('')}</div>
+    ${pages > 1 ? `<button class="chev" data-act="page-next" aria-label="Next ten images" ${page >= pages - 1 ? 'disabled' : ''}>${ic(I.chevR, {s: 16})}</button>` : ''}
+    <div class="striptools">
+      ${selecting ? `<button class="gallbtn" data-act="strip-clear">Cancel</button>
+        <button class="gallbtn primary" data-act="gall-export">${S.gallSel.length === 1 ? 'Export' : 'Export all'}</button>` : ''}
+      <button class="gallbtn" data-act="gallery-open">${ic(I.img, {s: 20})}Open gallery${more > 0 ? ` <span style="color:var(--aira-text-tertiary)">+${more}</span>` : ''}</button>
+    </div></div>`;
+}
+/* fit = the largest scale that shows the whole image clear of the toolbar band, never upscaling */
+function fitPct() {
+  const c = $('carea'), im = imgOf(S.active);
+  if (!c || !im || !c.clientWidth) return S.zoomPct;
+  const availW = c.clientWidth - 48, availH = c.clientHeight - 24 - 80;
+  const f = Math.min(1, availW / im.w, availH / im.h);
+  return Math.max(10, Math.min(100, Math.floor(f * 100)));
+}
+function refit() { const p = fitPct(); if (p !== S.zoomPct) { S.zoomPct = p; return true; } return false; }
+function canvasHTML() {
+  const im = imgOf(S.active); if (!im) return '';
+  const z = S.zoomPct / 100, w = Math.round(im.w * z), h = Math.round(im.h * z);
+  const box = creativeBox(w, h, im);   // one artwork, composed for this exact shape
+  const armed = S.tool === 'area';
+  // while simply viewing (no drawer, no tool, nothing generating) the image opens a full-screen preview
+  const canPreview = !S.panel && !S.tool && !S.rzBusy && !S.busy;
+  return `<div class="canvasarea" id="carea"><div class="canvastrack">
+      <div class="imgframe${armed ? ' arming' : ''}${canPreview ? ' zoomable' : ''}" id="iframe" ${canPreview ? 'data-act="preview"' : ''}>${(S.rzBusy || S.busy)
+        ? `<div class="skel" style="width:${w}px;height:${h}px;border-radius:var(--aira-radius-md)"></div>`
+        : box}</div>
+    </div></div>
+    ${armed && !S.areas.length ? `<div class="hint">${ic(I.area, {s: 16, c: '#fff'})}Drag to mark an area</div>` : ''}
+    <div class="tools">
+      <div style="display:flex;align-items:center;gap:1px">
+        <button class="tbtn" data-act="zoom-out" aria-label="Zoom out">${ic(I.minus, {s: 20})}</button>
+        <span class="zoom">${S.zoomPct}%</span>
+        <button class="tbtn" data-act="zoom-in" aria-label="Zoom in">${ic(I.plus, {s: 20})}</button>
+        <button class="tbtn" data-act="zoom-fit" aria-label="Fit to screen">${ic(I.fit, {s: 20})}</button>
+        <button class="tbtn" data-act="preview" aria-label="Full-screen preview">${ic(I.full, {s: 20})}</button>
+      </div>
+      <div class="vdiv"></div>
+      <div style="display:flex;align-items:center;gap:2px">
+        <button class="tool${S.panel === 'resize' ? ' on' : ''}" data-act="resize" aria-pressed="${S.panel === 'resize'}">
+          ${ic(I.crop, {s: 20})}<span class="tlabel">Resize</span></button>
+      </div>
+    </div>
+    ${S.toast ? `<div class="toast">${ic(I.check, {s: 20, c: '#364152', w: 1.8})}<span style="flex:1">${esc(S.toast)}</span>
+      <button class="iconbtn" data-act="toast-off" aria-label="Dismiss" style="width:30px;height:30px">${ic(I.x, {s: 16, c: '#6B7785'})}</button></div>` : ''}`;
+}
+function tplIcon(w, h) {
+  const m = 30, s = Math.min(m / w, m / h), W = Math.max(13, w * s), H = Math.max(9, h * s), SW = 1.5;
+  const iw = W - SW, ih = H - SW, o = SW / 2, r = Math.max(.9, .111 * Math.min(iw, ih));
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" stroke="#9AA4B2" stroke-width="${SW}"
+    stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><rect x="${o}" y="${o}" width="${iw}" height="${ih}" rx="2"/>
+    <circle cx="${o + .333 * iw}" cy="${o + .333 * ih}" r="${r}"/>
+    <path d="M${o + iw} ${o + .667 * ih} L${o + .829 * iw} ${o + .495 * ih} L${o + .167 * iw} ${o + ih}"/></svg>`;
+}
+
+/* ---------- export drawer: a name and a format, nothing else ---------- */
+function exExt() {
+  if (!S.exList.length) return '';
+  if (S.fmt === 'PDF') return '.pdf';                    // one document, however many pages
+  return S.exList.length > 1 ? '.zip' : '.' + S.fmt.toLowerCase();
+}
+function exportDrawer() {
+  const list = S.exList.map(i => S.images[i]).filter(Boolean);
+  const ext = exExt();
+  const label = S.exError ? 'Try again'
+    : S.exPartial ? 'Download ' + S.exPartial.ok
+    : (list.length > 1 && S.fmt !== 'PDF') ? 'Download ' + ext : 'Download';
+  return `<aside class="drawer" aria-label="Export">
+    <div class="dhead"><h3>Export</h3></div>
+    <div style="padding:0 16px 14px;border-bottom:1px solid var(--aira-bg-hover);position:relative">
+      <div class="lbl">Format</div>
+      <button class="btn tertiary" data-act="fmt" style="height:32px;padding:0 10px;margin:-2px 0 0 -10px">
+        ${esc(S.fmt)}${ic(I.chevD, {s: 16, c: '#6B7785'})}</button>
+      ${S.fmtOpen ? `<div class="dropdown" style="left:10px;top:54px;width:170px">
+        ${['PNG', 'JPG', 'PDF'].map(f => `<button class="ddrow${f === S.fmt ? ' on' : ''}" data-act="fmt-set" data-f="${f}">${f}${f === S.fmt ? ic(I.check, {s: 16, c: '#3438C9'}) : ''}</button>`).join('')}
+      </div>` : ''}
+    </div>
+    <div style="padding:14px 16px 0">
+      <div class="fieldlbl" style="margin-bottom:6px">Name</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input class="input" id="exname" value="${esc(S.exName)}" ${S.exBusy ? 'disabled' : ''} aria-label="File name">
+        <span style="flex:none;font:500 14px/19px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)">${ext}</span>
+      </div>
+    </div>
+    <div class="dbody" id="exscroll" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+      <div class="lbl">Images &#183; ${list.length}</div>
+      ${list.length === 0 ? `<div style="height:104px;border:1px dashed var(--aira-border-default);border-radius:10px;
+          display:flex;align-items:center;justify-content:center;text-align:center;padding:0 18px;
+          font:400 14px/21px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-grey-400)">Nothing to export. Pick images in the gallery.</div>`
+      : list.map(im => `<div class="exrow${S.exBusy ? ' quiet' : ''}">
+          <div style="flex:none;width:40px;height:40px;border-radius:6px;overflow:hidden;border:1px solid var(--aira-border-default);line-height:0;overflow:hidden">${creative(im.w, im.h, {tone: im.tone, cover: true})}</div>
+          <div style="flex:1;min-width:0"><div class="nm">${esc(im.name)}</div><div class="sz">${im.w} &#215; ${im.h} px</div></div>
+          ${S.exBusy ? '<div style="width:24px"></div>' : `<button class="xbtn" id="del-${im.id}" data-act="ex-del" data-id="${im.id}"
+            aria-label="Remove ${esc(im.name)} from this export">${ic(I.x, {s: 16, c: '#6B7785', w: 1.8})}</button>`}
+        </div>`).join('')}
+    </div>
+    ${S.exError ? `<div class="banner danger" style="margin:0 16px 12px">${ic(I.warn, {s: 20, c: '#B11E1E'})}
+       <div><div class="bt">Export failed</div><div class="bb">The archive could not be built. Nothing was downloaded and nothing was spent.</div></div></div>` : ''}
+    ${S.exPartial ? `<div class="banner" style="margin:0 16px 12px">${ic(I.warn, {s: 20, c: '#9A5B00'})}
+       <div><div class="bt">${S.exPartial.ok} of ${S.exPartial.all} exported</div>
+       <div class="bb">${esc(S.exPartial.names)} could not be read.</div></div></div>` : ''}
+    <div class="dfoot">
+      <button class="btn secondary" data-act="ex-cancel">${S.exBusy ? 'Stop' : 'Cancel'}</button>
+      <button class="btn primary" data-act="ex-go" ${list.length === 0 || S.exBusy ? 'disabled' : ''}>
+        ${S.exBusy ? `<span class="spin onfill"></span>Preparing ${ext}` : esc(label)}</button>
+    </div>
+  </aside>`;
+}
+
+/* ---------- resize drawer ---------- */
+function rzTarget() {
+  const t = S.rzPick ? TPLS.find(x => x.n === S.rzPick) : null;
+  return t ? {w: t.w, h: t.h, name: t.n} : {w: S.rzW, h: S.rzH, name: null};
+}
+function rzCheck() {
+  const t = rzTarget(), im = imgOf(S.active);
+  if (!t.w || !t.h || isNaN(t.w) || isNaN(t.h)) return {note: ['Enter a width and a height', 'Both have to be numbers before anything can run.'], tone: 'warning', gen: false, crop: false};
+  if (Math.max(t.w, t.h) > MAX_PX) return {note: [Math.max(t.w, t.h) + ' px is past what aiRA can generate',
+    'The ceiling is ' + MAX_PX + ' px on the long edge. Pick a smaller size.'], tone: 'warning', gen: false, crop: false};
+  if (Math.min(t.w, t.h) < MIN_PX) return {note: [Math.min(t.w, t.h) + ' px is below the floor',
+    'The minimum is ' + MIN_PX + ' px on the short edge.'], tone: 'warning', gen: false, crop: false};
+  if (im && (t.w > im.w || t.h > im.h)) return {note: ['Cropping can’t reach this size',
+    'It’s larger than the ' + im.w + ' × ' + im.h + ' px source. Ask aiRA in chat to generate it at this size.'], tone: 'warning', gen: true, crop: false};
+  return {note: null, gen: true, crop: true};
+}
+function resizeDrawer() {
+  const q = S.rzSearch.trim().toLowerCase();
+  const hits = TPLS.filter(t => !q || t.n.toLowerCase().includes(q) || t.sub.toLowerCase().includes(q) || t.g.toLowerCase().includes(q));
+  const groups = [];
+  hits.forEach(t => { let g = groups.find(x => x.g === t.g); if (!g) { g = {g: t.g, subs: []}; groups.push(g); }
+    let s = g.subs.find(x => x.s === t.sub); if (!s) { s = {s: t.sub, items: []}; g.subs.push(s); } s.items.push(t); });
+  const tile = t => `<button class="tpl${S.rzPick === t.n ? ' on' : ''}" data-act="tpl" data-n="${esc(t.n)}">
+      <span style="display:flex;align-items:center;justify-content:center;height:36px">${tplIcon(t.w, t.h)}</span>
+      <span class="tn">${esc(t.n)}</span><span class="ts">${t.w} &#215; ${t.h} px</span></button>`;
+  const chk = rzCheck();
+  const body = S.rzBusy
+    ? `<div style="margin:0 0 var(--aira-sp-4);display:flex;align-items:center;gap:var(--aira-sp-2);padding:var(--aira-sp-3);border:1px solid #DDE0FF;
+         background:var(--aira-bg-selected);border-radius:var(--aira-radius-md)">
+         <span class="spin"></span><span style="font:400 14px/19px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-secondary)">Generating the resized version</span></div>`
+    : `<div>
+        <div style="background:var(--aira-bg-canvas);border:1px solid var(--aira-border-default);border-radius:var(--aira-radius-md);padding:var(--aira-sp-3);margin-bottom:var(--aira-sp-4)">
+          <div class="lbl" style="letter-spacing:.06em;margin-bottom:10px">Custom size</div>
+          <div style="display:flex;align-items:flex-end;gap:8px">
+            <div style="flex:1"><label style="display:block;font:400 12px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary);margin-bottom:4px" for="rzw">Width</label>
+              <input class="input" id="rzw" value="${S.rzW}" inputmode="numeric" aria-label="Width in pixels"></div>
+            <button class="pbtn ratiolock${S.rzLock ? ' on' : ''}" data-act="rz-lock" aria-pressed="${S.rzLock}"
+              aria-label="${S.rzLock ? 'Unlock aspect ratio' : 'Lock aspect ratio'}" style="align-self:flex-end;margin-bottom:1px">${ic(S.rzLock ? I.link2 : I.unlink2, {s: 20, c: S.rzLock ? '#3438C9' : '#6B7785'})}</button>
+            <div style="flex:1"><label style="display:block;font:400 12px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary);margin-bottom:4px" for="rzh">Height</label>
+              <input class="input" id="rzh" value="${S.rzH}" inputmode="numeric" aria-label="Height in pixels"></div>
+          </div>
+        </div>
+        <div style="margin:0 0 14px;position:relative">
+          <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);display:flex">${ic(I.search, {s: 16, c: '#9AA4B2'})}</span>
+          <input class="input" id="rzq" value="${esc(S.rzSearch)}" placeholder="Search for templates" aria-label="Search for templates" style="height:38px;padding-left:36px">
+        </div>
+        ${groups.length === 0 ? `<div style="padding:28px 6px;text-align:center">
+            <div style="font:500 14px/21px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)">No templates match &ldquo;${esc(S.rzSearch)}&rdquo;</div>
+            <div style="margin-top:2px;font:400 13px/19px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)">Try a channel name like WhatsApp or RCS, or enter an exact size above.</div></div>`
+        : groups.map(g => `<div style="margin:10px 0 2px">
+            <button class="grouphd" data-act="group" data-g="${esc(g.g)}">
+              <span class="lbl" style="letter-spacing:.06em">${esc(g.g)}</span>${ic(S.rzOpen[g.g] ? I.chevD : I.chevR, {s: 16, c: '#6B7785'})}</button>
+            ${S.rzOpen[g.g] ? g.subs.map(s => s.s ? `<div><button class="grouphd" data-act="group" data-g="${esc(s.s)}" style="padding:4px 8px">
+                  <span class="lbl" style="color:var(--aira-grey-400)">${esc(s.s)}</span>${ic(S.rzOpen[s.s] ? I.chevD : I.chevR, {s: 16, c: '#9AA4B2'})}</button>
+                ${S.rzOpen[s.s] ? `<div class="tplgrid">${s.items.map(tile).join('')}</div>` : ''}</div>`
+              : `<div class="tplgrid">${s.items.map(tile).join('')}</div>`).join('') : ''}
+          </div>`).join('')}
+      </div>`;
+  return `<aside class="drawer" aria-label="Resize">
+    <div class="dhead"><h3>Resize</h3>
+      <button class="btn tertiary" data-act="rz-reset" style="height:30px;color:var(--aira-indigo-600)" ${S.rzBusy ? 'disabled' : ''}>Reset</button></div>
+    <div class="dbody">${body}</div>
+    ${chk.note && !S.rzNoteX ? `<div class="banner ${chk.tone === 'info' ? 'info' : 'warning'}" style="margin:0 var(--aira-sp-4) var(--aira-sp-3)"><span class="bnr-ic">${ic(chk.tone === 'info' ? I.info : I.warn, {s: 20, c: chk.tone === 'info' ? '#1F6AAA' : '#8A5500'})}</span>
+      <div class="bnr-body"><div class="bt">${esc(chk.note[0])}</div><div class="bb">${esc(chk.note[1])}</div></div>
+      <button class="bnr-x" data-act="rz-note-x" aria-label="Dismiss">${ic(I.x, {s: 16, c: '#6B7785', w: 1.8})}</button></div>` : ''}
+    <div style="padding:16px;border-top:1px solid var(--aira-border-default)">
+      <div style="display:flex;gap:8px">
+        <button class="btn secondary" style="width:88px" data-act="rz-cancel">Cancel</button>
+        <button class="btn primary" data-act="rz-apply" ${chk.crop ? '' : 'disabled'}>Apply crop</button>
+      </div>
+    </div>
+  </aside>`;
+}
+
+/* ---------- gallery ---------- */
+function galleryHTML() {
+  const n = S.images.length, sel = i => S.gallSel.includes(i), selecting = S.gallSel.length > 0;
+  const all = S.gallSel.length === n && n > 0;
+  return `<div class="gallery${selecting ? ' selecting' : ''}" role="dialog" aria-label="All images">
+    <div class="gallhead">
+      <div style="flex:1">
+        <h2 style="margin:0;font:600 19px/27px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)">${selecting ? S.gallSel.length + ' selected' : 'All images'}</h2>
+        <div style="font:400 14px/21px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)">${n ? n + ' in this session' : 'Nothing in this session yet'}</div>
+      </div>
+      ${n && selecting ? `<button class="btn tertiary" data-act="gall-all">${all ? 'Deselect all' : 'Select all'}</button>
+           <button class="btn primary" style="flex:none" data-act="gall-export">Export selected images</button>` : ''}
+      <button class="iconbtn" data-act="gall-close" aria-label="Close gallery">${ic(I.x, {s: 20, c: '#4D5867'})}</button>
+    </div>
+    <div class="gallgrid">${n ? S.images.map((im, i) => `
+      <div class="gcard${sel(i) ? ' sel' : ''}">
+        <div class="gthumb" data-act="gall-card" data-i="${i}" role="button"
+          aria-label="${selecting ? (sel(i) ? 'Deselect' : 'Select') : 'Open'} ${esc(im.name)}" aria-pressed="${sel(i)}">
+          <div class="gpic">${creative(im.w, im.h, {tone: im.tone, cover: true})}</div>
+          <button class="gcheck${sel(i) ? ' on' : ''}" data-act="gall-toggle" data-i="${i}"
+            aria-label="${sel(i) ? 'Deselect' : 'Select'} ${esc(im.name)}" aria-pressed="${sel(i)}">
+            ${sel(i) ? ic(I.check, {s: 15, c: '#fff', w: 3}) : ''}</button>
+        </div>
+        <div class="gcap"><div class="gname">${esc(im.name)}</div><div class="gmeta">${esc(im.ver)} &#183; ${im.w} &#215; ${im.h} px</div></div>
+      </div>`).join('')
+      : `<div class="emptyblk">${ic(I.img, {s: 32, c: '#C9D0D9'})}
+          <div><div style="font:500 16px/23px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-secondary)">No images yet</div>
+          <div style="margin-top:4px;font:400 14px/21px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary);max-width:340px">Ask aiRA for a creative and everything made in this session collects here.</div></div></div>`}
+    </div>
+  </div>`;
+}
+function pickerSurface() {
+  if (S.regen) return `<div class="pickwrap"><div class="picktrack"><div style="text-align:center">
+      <div style="font:600 23px/31px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)">Generating two new concepts&hellip;</div>
+      <div style="margin-top:6px;font:400 14px/21px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)">This only takes a moment.</div>
+      <div style="margin-top:26px;display:flex;gap:20px;justify-content:center">
+        ${[0, 1].map(() => `<div style="width:280px;border:2px solid var(--aira-border-default);border-radius:12px;overflow:hidden">
+          <div class="skel" style="height:280px"></div></div>`).join('')}
+      </div></div></div></div>`;
+  return `<div class="pickwrap"><div class="picktrack"><div style="text-align:center">
+    <div style="font:600 23px/31px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-primary)">Pick the one that you like</div>
+    <div style="margin-top:26px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
+      ${S.concepts.map((c, i) => `<button class="pcard" data-act="pick-opt" data-i="${i}"
+          aria-label="Use concept ${i + 1}">${(f => creative(f.w, f.h, c))(fit(276, 276, c))}</button>`).join('')}
+    </div></div></div></div>`;
+}
+
+/* ===================== render ===================== */
+function render() {
+  if (S.stage === 'editor' && !S.images.length) S.stage = null;   // the flags can never disagree
+  if (S.stage !== 'editor') S.panel = null;
+  const im = imgOf(S.active);
+  const narrow = !!S.stage;
+  const ph = S.view === 'home' ? 'What’s our mission today?'
+    : S.stage === 'picker' ? 'Pick a concept, or ask for two more…'
+    : S.stage === 'editor' ? 'Ask aiRA to change this image…'
+    : S.needFormat ? 'Tell me what it’s for, or ask for something else…'
+    : 'Describe the image you need';
+
+  const chatCol = `<div class="chat${narrow ? ' narrow' : ''}">
+      ${narrow ? '' : `<div style="position:absolute;right:24px;top:20px;z-index:2">
+        <button class="iconbtn" data-act="noop" aria-label="Share this session">${ic(I.share, {s: 20, c: '#4D5867'})}</button></div>`}
+      <div class="threadwrap"><div class="thread" id="thread"><div class="tinner">${threadHTML()}</div></div></div>
+      <div class="composer">${cardHTML()}<div class="cinner">
+        ${S.stick ? '' : `<button class="scrolldown" data-act="to-bottom" aria-label="Scroll to the newest message">${ic(I.chevD, {s: 20, c: '#4D5867'})}</button>`}
+        ${composerHTML(ph)}</div></div>
+    </div>`;
+
+  let cols;
+  if (S.view === 'home') cols = homeHTML();
+  else if (!narrow) cols = `<div class="cols">${chatCol}${railHTML()}</div>`;
+  else cols = `<div class="cols showpanel">${chatCol}${
+      S.stage === 'picker'
+        ? `<div class="panel"><div class="phead"><span class="ptitle">Two concepts</span>
+             <button class="iconbtn" data-act="art-close" aria-label="Close panel">${ic(I.x, {s: 20, c: '#4D5867'})}</button></div>
+           <div class="canvaswrap">${pickerSurface()}</div></div>`
+        : `<div class="panel">
+            ${stripHTML()}
+            <div class="phead filerow"><span class="ptitle">${esc(im ? im.name : '')} <span class="pdim">${im ? im.w : 0} &#215; ${im ? im.h : 0} px</span></span>
+              <button class="pbtn" data-act="export" aria-label="Export">${ic(I.dl, {s: 20, c: '#364152'})}</button>
+              <button class="pbtn" data-act="copy-img" aria-label="Copy image to clipboard">${ic(S.copied ? I.check : I.copy, {s: 20, c: S.copied ? '#3438C9' : '#364152'})}</button>
+              <button class="iconbtn" data-act="art-close" aria-label="Close panel">${ic(I.x, {s: 20, c: '#4D5867'})}</button></div>
+            <div class="work"><div class="canvaswrap">${canvasHTML()}</div>
+              ${S.panel === 'resize' ? resizeDrawer() : S.panel === 'export' ? exportDrawer() : ''}</div>
+          </div>`}</div>`;
+
+  $('app').innerHTML = navHTML() + `<div class="main">${topbarHTML()}${cols}
+    ${S.gallery ? galleryHTML() : ''}
+    ${S.preview ? `<div style="position:absolute;inset:0;background:rgba(17,24,39,.88);z-index:70;display:flex;
+        align-items:center;justify-content:center" data-act="preview-off">
+        <div style="line-height:0">${(f => creative(f.w, f.h, im))(fit(window.innerWidth - 160, window.innerHeight - 160, im))}</div>
+        <button class="iconbtn" data-act="preview-off" style="position:absolute;right:24px;top:24px" aria-label="Close preview">${ic(I.x, {s: 20, c: '#fff'})}</button></div>` : ''}
+  </div>`;
+  bind(); bindDrag(); bindCrop(); restoreScroll(); restoreFocus();
+  if (S.refit) { S.refit = false; if (refit()) render(); }   // measure once the canvas exists
+}
+function restoreScroll() {
+  const t = $('thread'); if (t && S.stick) t.scrollTop = t.scrollHeight;
+  const e = $('exscroll'); if (e) { S.listScroll = Math.max(0, Math.min(S.listScroll, e.scrollHeight - e.clientHeight)); e.scrollTop = S.listScroll; }
+}
+function restoreFocus() {
+  if (!S.focusAfter) return;
+  const k = S.focusAfter; S.focusAfter = null;
+  const el = /^[#\[.]/.test(k) ? document.querySelector(k) : ($(k) || document.querySelector('[data-act="' + k + '"]'));
+  if (el && el.focus) { el.focus(); if (el.setSelectionRange && el.value) el.setSelectionRange(el.value.length, el.value.length); }
+}
+
+/* ===================== interactions ===================== */
+function bind() {
+  const app = $('app');
+  app.querySelectorAll('[data-act]').forEach(el => {
+    el.onclick = ev => { ev.stopPropagation(); act(el.getAttribute('data-act'), el); }; });
+  const c = $('composer'); if (c) {
+    c.oninput = e => { S.draft = e.target.value; paintSend(); };
+    c.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); act('send'); } }; }
+  const q = $('qtyped'); if (q) {
+    q.oninput = e => { S.card.typed = e.target.value; };
+    q.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); act('q-typed'); } }; }
+  const rq = $('rzq'); if (rq) rq.oninput = e => { S.rzSearch = e.target.value; S.focusAfter = 'rzq'; render(); };
+  const syncCrop = () => { const im = imgOf(S.active);
+    const fw = Math.max(.02, Math.min(1, S.rzW / im.w)), fh = Math.max(.02, Math.min(1, S.rzH / im.h));
+    S.crop = {fx: (1 - fw) / 2, fy: (1 - fh) / 2, fw, fh}; };
+  const rw = $('rzw'); if (rw) rw.oninput = e => { S.rzW = +e.target.value || 0; S.rzPick = null; S.rzNoteX = false;
+    if (S.rzLock && S.rzLockR) S.rzH = Math.max(1, Math.round(S.rzW / S.rzLockR)); syncCrop(); S.focusAfter = 'rzw'; render(); };
+  const rh = $('rzh'); if (rh) rh.oninput = e => { S.rzH = +e.target.value || 0; S.rzPick = null; S.rzNoteX = false;
+    if (S.rzLock && S.rzLockR) S.rzW = Math.max(1, Math.round(S.rzH * S.rzLockR)); syncCrop(); S.focusAfter = 'rzh'; render(); };
+  const n = $('exname'); if (n) n.oninput = e => { S.exName = e.target.value; };
+  const ex = $('exscroll'); if (ex) ex.onscroll = () => { S.listScroll = ex.scrollTop; };
+  const th = $('thread'); if (th) th.onscroll = () => {
+    const near = th.scrollHeight - th.scrollTop - th.clientHeight < 40;
+    if (near !== S.stick) { S.stick = near; const b = document.querySelector('[data-act="to-bottom"]');
+      if (!b || !near) render(); } };
+  // Click outside the editor — i.e. bare chat space beside it — closes the editor. Clicking a
+  // message, card, nudge, the composer or any control is spared, so only empty space closes.
+  // Clicking outside an open drawer (resize/export) closes just that drawer — never the editor,
+  // which only the header close (X) shuts. The image, its crop frame and the floating toolbar are
+  // spared so dragging a crop out on the canvas doesn't dismiss the drawer mid-gesture.
+  if (S.panel) { const cols = document.querySelector('.cols'); if (cols) {
+    cols.onclick = e => {
+      if (e.target.closest('aside.drawer, #iframe, #imgsq, .tools, .cropframe, button, a, input, textarea, [data-act]')) return;
+      S.panel = null; S.tool = null; S.refit = true; render();
+    }; } }
+}
+function paintSend() {
+  const b = document.querySelector('[data-act="send"]'); if (!b) return;
+  const hot = !!(S.draft || (S.areas.length && !S.sent));
+  b.classList.toggle('on', hot);
+  b.innerHTML = ic(I.up, {s: 20, c: hot ? '#fff' : '#9AA4B2', w: 1.9});
+}
+
+/* ---------- resize: a draggable / resizable Freeform crop frame ---------- */
+function bindCrop() {
+  const fr = $('cropframe'); if (!fr) return;
+  const sq = $('imgsq'); if (!sq) return;
+  const im = imgOf(S.active);
+  const tpl = S.rzPick ? TPLS.find(x => x.n === S.rzPick) : null;
+  const lockR = tpl ? (tpl.w / tpl.h) * (im.h / im.w) : (S.rzLock && S.rzLockR ? S.rzLockR * im.h / im.w : null);
+  const minW = Math.min(1, MIN_PX / im.w), minH = Math.min(1, MIN_PX / im.h);
+  const start = (ev, mode) => {
+    ev.preventDefault(); ev.stopPropagation();
+    const r = sq.getBoundingClientRect();
+    const c0 = Object.assign({fx: 0, fy: 0, fw: 1, fh: 1}, S.crop);
+    const px = ev.clientX, py = ev.clientY;
+    const move = e => {
+      const dx = (e.clientX - px) / r.width, dy = (e.clientY - py) / r.height;
+      let {fx, fy, fw, fh} = c0;
+      if (mode === 'move') {
+        fx = Math.max(0, Math.min(1 - fw, c0.fx + dx));
+        fy = Math.max(0, Math.min(1 - fh, c0.fy + dy));
+      } else {
+        if (mode.indexOf('l') >= 0) { const nx = Math.max(0, Math.min(c0.fx + c0.fw - minW, c0.fx + dx)); fw = c0.fx + c0.fw - nx; fx = nx; }
+        if (mode.indexOf('r') >= 0) { fw = Math.max(minW, Math.min(1 - c0.fx, c0.fw + dx)); }
+        if (mode.indexOf('t') >= 0) { const ny = Math.max(0, Math.min(c0.fy + c0.fh - minH, c0.fy + dy)); fh = c0.fy + c0.fh - ny; fy = ny; }
+        if (mode.indexOf('b') >= 0) { fh = Math.max(minH, Math.min(1 - c0.fy, c0.fh + dy)); }
+        if (lockR) {                                 // hold the aspect ratio, anchored at the opposite edge
+          const fracR = lockR;                       // fw/fh in fraction space
+          const widthDriven = (mode === 'l' || mode === 'r' || mode.length === 2);
+          if (widthDriven) fh = fw / fracR; else fw = fh * fracR;
+          if (mode.indexOf('t') >= 0) fy = c0.fy + c0.fh - fh;
+          else if (mode === 'l' || mode === 'r') fy = c0.fy + (c0.fh - fh) / 2;
+          else fy = c0.fy;
+          if (mode.indexOf('l') >= 0) fx = c0.fx + c0.fw - fw;
+          else if (mode === 't' || mode === 'b') fx = c0.fx + (c0.fw - fw) / 2;
+          else fx = c0.fx;
+          fw = Math.min(fw, 1); fh = Math.min(fh, 1);
+          fx = Math.max(0, Math.min(1 - fw, fx)); fy = Math.max(0, Math.min(1 - fh, fy));
+        }
+      }
+      S.crop = {fx, fy, fw, fh};
+      if (!S.rzPick) {                             // a template's output size is fixed; only Freeform tracks the region
+        S.rzW = Math.round(fw * im.w); S.rzH = Math.round(fh * im.h);
+        const wI = $('rzw'), hI = $('rzh'); if (wI) wI.value = S.rzW; if (hI) hI.value = S.rzH;
+      }
+      fr.style.left = fx * r.width + 'px'; fr.style.top = fy * r.height + 'px';
+      fr.style.width = fw * r.width + 'px'; fr.style.height = fh * r.height + 'px';
+    };
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); render(); };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  };
+  fr.onpointerdown = e => { if (e.target.dataset && e.target.dataset.h) return; start(e, 'move'); };
+  fr.querySelectorAll('.ch').forEach(hd => hd.onpointerdown = e => start(e, hd.dataset.h));
+}
+
+/* ---------- select area: real pointer drag ---------- */
+function bindDrag() {
+  const fr = $('iframe'); if (!fr) return;
+  fr.onpointerdown = ev => {
+    if (S.tool !== 'area' || S.sent || S.rzBusy || S.busy) return;
+    if (ev.target.closest && ev.target.closest('.areax')) return;   // the close button is not a canvas
+    const sq = $('imgsq'); if (!sq) return;
+    ev.preventDefault();
+    const r = sq.getBoundingClientRect();
+    const cl = v => Math.max(0, Math.min(1, v));
+    const fx0 = cl((ev.clientX - r.left) / r.width), fy0 = cl((ev.clientY - r.top) / r.height);
+    const box = $('livebox'), lab = $('livesize'), im = imgOf(S.active);
+    let cur = null;
+    const move = e => {
+      const fx1 = cl((e.clientX - r.left) / r.width), fy1 = cl((e.clientY - r.top) / r.height);
+      cur = {fx: Math.min(fx0, fx1), fy: Math.min(fy0, fy1),
+             fw: Math.abs(fx1 - fx0), fh: Math.abs(fy1 - fy0)};
+      const px = Math.round(cur.fw * im.w) + ' × ' + Math.round(cur.fh * im.h) + ' px';
+      box.style.display = 'block';
+      box.style.left = cur.fx * r.width + 'px'; box.style.top = cur.fy * r.height + 'px';
+      box.style.width = cur.fw * r.width + 'px'; box.style.height = cur.fh * r.height + 'px';
+      lab.style.display = 'block'; lab.textContent = px;            // live while dragging, never after
+      lab.style.left = cur.fx * r.width + 'px';
+      lab.style.top = Math.max(0, cur.fy * r.height - 24) + 'px';
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+      if (box) { box.style.display = 'none'; } if (lab) { lab.style.display = 'none'; }
+      if (!cur || cur.fw < .02 || cur.fh < .02) return;            // a stray click is not a box
+      S.areaSeq++;                                                  // numbers never reflow
+      S.areas.push({n: S.areaSeq, fx: cur.fx, fy: cur.fy, fw: cur.fw, fh: cur.fh, img: im.id,
+        px: Math.round(cur.fw * im.w) + ' × ' + Math.round(cur.fh * im.h) + ' px'});
+      S.focusAfter = '#composer';
+      render();
+    };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  };
+}
+
+/* ---------- turns ---------- */
+function hasFormat(t) { const s = t.toLowerCase(); return FORMAT_WORDS.some(w => s.includes(w)); }
+function conceptPair() { const a = TONES[S.genCount % 4], b = TONES[(S.genCount + 1) % 4];
+  return [{tone: a}, {tone: b}]; }
+function openCard(q, group, resolved) { S.card = {q: q, group: group || null, resolved: resolved || null, typed: ''}; S.needFormat = true; }
+
+function firstGen(label) {
+  S.card = null; S.needFormat = false; S.fmtChoice = label;
+  const t = TPLS.find(x => x.n === label) || TPLS[7];
+  S.pending = {w: t.w, h: t.h, name: t.n};
+  S.busy = true; S.stage = null; S.stick = true;
+  tool('Loading playbook: image_generation…');
+  say('Two directions at ' + t.w + ' × ' + t.h + ' px for ' + t.n.toLowerCase() + ', both leading with the 50% offer.');
+  S.msgs.push({t: 'skel', h: 56});
+  render();                                    // show the generating state, not just schedule it
+  later('gen', 1700, () => {
+    S.busy = false; S.genCount++;
+    S.msgs = S.msgs.filter(m => m.t !== 'skel');
+    S.concepts = conceptPair(); S.stage = 'picker';
+    render();
+  });
+}
+function startRegen() {
+  S.regen = true; S.stage = 'picker'; S.stick = true; render();
+  later('regen', 1700, () => { S.regen = false; S.genCount += 2; S.concepts = conceptPair();
+    say('Two fresh directions. That spent 2 credits — rerolling replaces both.'); render(); });
+}
+function startEdit(text) {
+  S.busy = true; S.stick = true; S.msgs.push({t: 'skel', h: 56});
+  const areas = S.areas.slice(); render();
+  later('edit', 1700, () => {
+    S.busy = false; S.genCount++;
+    S.msgs = S.msgs.filter(m => m.t !== 'skel');
+    if (S.genCount % 5 === 0) {                        // a real failure is reachable, not hypothetical
+      S.msgs.push({t: 'banner', danger: true, title: 'Couldn’t finish that edit',
+        body: 'The image is unchanged and nothing was spent.', action: 'Try again'});
+      render(); return;
+    }
+    const prev = imgOf(S.active);
+    snapshot();
+    const im = mkImage({w: prev.w, h: prev.h, tone: prev.tone, ver: 'v' + (S.images.length + 1),
+      name: 'aira_gen_pantaloons_diwali_v' + (S.images.length + 1) + '.png'});
+    S.images.push(im); S.active = S.images.length - 1; S.page = Math.floor(S.active / 10);
+    S.areas = []; S.sent = false; S.tool = null; S.refit = true;   // regions consumed by the turn that used them
+    S.stage = 'editor';
+    S.msgs.push({t: 'card', title: 'Pantaloons Diwali sale creative', ver: im.ver, img: im.id});
+    say(areas.length
+      ? 'Done in ' + (areas.length > 1 ? 'areas ' : 'area ') + listOf(areas.map(a => a.n)) +
+        '. The offer line moved down a step to keep clear of it.'
+      : 'Headline’s up two steps. The offer line was colliding, so I moved it down.');
+    render();
+  });
+}
+/* refusals are ordinary replies, not error states: can't / can / next */
+const REFUSALS = [
+  [/shah rukh|shahrukh|real person|celebrity|actor |virat|deepika/i,
+   "I can't generate real, identifiable people. I can create an original model with the look and styling you want \u2014 festive ethnic wear, similar age and mood. Describe the styling and I'll draft two directions."],
+  [/mickey|disney|marvel|pikachu|copyright|trademark|batman/i,
+   "I can't use copyrighted characters. I can design an original festive mascot in a similar style and place it beside the lamps. Want me to try that?"],
+  [/slimmer|thinner|skinnier|body shape|lighter skin|fairer/i,
+   "I can't alter a person's body shape or skin tone. I can change the styling, the pose or the crop instead. Which would help?"],
+  [/diagram|flowchart|warehouse|architecture|schematic|spreadsheet/i,
+   "I can't build technical diagrams \u2014 I make marketing creative. For a Diwali campaign I can do banners, story formats and RCS cards. Tell me the channel and I'll start."],
+  [/qr code|scannable/i,
+   "I can't put a scannable QR code into a generated image \u2014 it won't scan reliably. I can leave a clear space for one and you drop it in after export."],
+];
+const QUOTA = 8;
+function refusalFor(t) { const r = REFUSALS.find(x => x[0].test(t)); return r ? r[1] : null; }
+function quotaHit() {
+  if (S.genCount < QUOTA) return false;
+  if (!S.msgs.some(m => m.t === 'banner' && m.quota))
+    S.msgs.push({t: 'banner', quota: true, title: 'You\u2019ve used ' + QUOTA + ' of ' + QUOTA + ' image generations this month',
+      body: 'Your limit resets on 1 October, or ask your admin to raise it for this workspace. You can still edit, crop and export what you already have.'});
+  return true;
+}
+function doSend() {
+  const text = S.draft.trim();
+  const live = S.areas.length && !S.sent;
+  if (!text && !live) return;
+  if (S.busy || S.regen) return;
+  S.view = 'chat'; S.stick = true;
+  if (live && !text) {                                  // a region with no sentence: aiRA asks
+    S.msgs.push({t: 'u', chips: S.areas.slice()});
+    S.sent = true; S.draft = '';
+    say('Got ' + (S.areas.length > 1 ? 'areas ' : 'area ') + listOf(S.areas.map(a => a.n)) +
+      '. What should I do with ' + (S.areas.length > 1 ? 'them' : 'it') + '?');
+    render(); return;
+  }
+  S.msgs.push(live ? {t: 'u', chips: S.areas.slice(), x: text} : {t: 'u', x: text});
+  if (live) S.sent = true;
+  S.draft = '';
+  const no = refusalFor(text);
+  if (no) { say(no); render(); return; }            // nothing failed, so nothing is spent and nothing goes red
+  if (quotaHit()) { render(); return; }             // the wall — editing and exporting still work
+  if (!S.images.length && S.stage !== 'picker') {
+    if (hasFormat(text) || S.fmtChoice) { firstGen(pickTplFrom(text)); }
+    else { openCard('purpose'); say('I’ve got the brief: Pantaloons, Diwali, flat 50% off, festive. I need to know what it’s for before I generate — the size is baked into the image, so changing it later means generating again.'); render(); }
+    return;
+  }
+  if (S.stage === 'picker') { startRegen(); render(); return; }   // two concepts only on the first attempt
+  startEdit(text); render();
+}
+function pickTplFrom(text) {
+  const s = text.toLowerCase();
+  const hit = TPLS.find(t => s.includes(t.n.toLowerCase())) || TPLS.find(t => t.sub && s.includes(t.sub.toLowerCase()));
+  if (hit) return hit.n;
+  if (s.includes('story')) return 'Instagram story';
+  if (s.includes('email')) return 'Email banner';
+  if (s.includes('banner')) return 'Banner';
+  if (s.includes('rcs')) return 'Standard card';
+  if (s.includes('whatsapp') || s.includes('square')) return 'Square';
+  return 'Instagram post';
+}
+
+/* ---------- the one click handler ---------- */
+function act(a, el) {
+  const d = k => el && el.getAttribute(k);
+  if (a !== 'fmt' && a !== 'fmt-set') S.fmtOpen = false;     // any other click closes the dropdown
+  switch (a) {
+    case 'noop': return;
+    case 'send': doSend(); return;
+    case 'stop-gen': clearLater(); S.busy = false; S.regen = false; S.rzBusy = false;
+      S.msgs = S.msgs.filter(m => m.t !== 'skel');
+      toast('Generation stopped — nothing was spent'); break;
+    case 'nudge': S.draft = d('data-x'); S.view = S.view === 'home' ? 'home' : 'chat';
+      S.focusAfter = '#composer'; break;                     // a nudge fills the composer; it never runs
+    case 'to-bottom': S.stick = true; break;
+    case 'nav-toggle': { const auto = !!S.stage && window.innerWidth < 1600;
+      const now = S.navCollapsed === null ? auto : S.navCollapsed; S.navCollapsed = !now; S.refit = true; break; }
+    case 'rail': { const g = d('data-g'); S.railOpen[g] = S.railOpen[g] ? 0 : 1; break; }
+
+    /* clarification card */
+    case 'q-purpose': { const k = d('data-k');
+      if (k === 'RCS') { openCard('shape', 'RCS', 'RCS card'); break; }
+      firstGen(PURPOSE_TPL[k]); return; }
+    case 'q-shape': firstGen(d('data-n')); return;
+    case 'q-typed': { const v = (S.card.typed || '').trim(); if (!v) { S.focusAfter = 'qtyped'; break; }
+      firstGen(pickTplFrom(v)); return; }
+    case 'q-skip': say('You didn’t say, so I went with Instagram post — 1080 × 1350 px.');
+      firstGen('Instagram post'); return;
+    case 'q-min': S.card = null; break;                      // minimised; the question is still open
+    case 'q-close': S.card = null; break;                    // Close commits nothing
+
+    /* the picker: clicking a concept IS the commit — there is no confirm step */
+    case 'pick-opt': {
+      const k = +d('data-i'), c = S.concepts[k] || S.concepts[0];
+      const t0 = S.pending || {w: 1080, h: 1350, name: 'Instagram post'};
+      const im = mkImage({w: t0.w, h: t0.h, tone: c.tone, ver: 'v1',
+        name: 'aira_gen_pantaloons_diwali.png'});
+      S.images = [im]; S.active = 0; S.page = 0; S.stage = 'editor'; S.concepts = [];
+      S.history = []; S.refit = true;
+      S.msgs.push({t: 'card', title: 'Pantaloons Diwali sale creative', ver: 'v1', img: im.id});
+      say('Both were ' + t0.w + ' \u00d7 ' + t0.h + ' px for ' + t0.name.toLowerCase() +
+        '. The wordmark is AI-rendered \u2014 not your real logo.');
+      break; }
+
+    /* strip + panel */
+    case 'strip-toggle': S.stripOpen = !S.stripOpen; S.refit = true; break;
+    case 'strip-clear': S.gallSel = []; break;
+    case 'page-prev': S.page = Math.max(0, S.page - 1); break;
+    case 'page-next': S.page = Math.min(Math.ceil(S.images.length / 10) - 1, S.page + 1); break;
+    case 'pick': S.active = +d('data-i'); S.page = Math.floor(S.active / 10);
+      S.areas = []; S.sent = false; S.tool = null; S.toast = null; S.refit = true; break;
+    case 'open-art': { const id = d('data-id');
+      let i = S.images.findIndex(x => x.id === id);
+      if (i < 0) i = S.images.length - 1;                 // never dead-end: fall back to the latest
+      if (i < 0) break;
+      S.active = i; S.page = Math.floor(i / 10);
+      S.stage = 'editor'; S.panel = null; S.gallery = false; S.refit = true; break; }
+    case 'art-close': S.stage = null; S.panel = null; S.tool = null; S.areas = []; S.sent = false;
+      clearLater(); S.busy = false; S.regen = false; S.rzBusy = false; S.toast = null; break;
+    case 'copy-img': {                         // copy to the clipboard — a tick confirms, then reverts
+      S.copied = true; render();
+      clearTimeout(S.copyTmr); S.copyTmr = setTimeout(() => { S.copied = false; render(); }, 1500);
+      return; }
+
+    /* canvas */
+    case 'zoom-in': S.zoomPct = LADDER.find(v => v > S.zoomPct) || 200; break;
+    case 'zoom-out': S.zoomPct = LADDER.slice().reverse().find(v => v < S.zoomPct) || 10; break;
+    case 'zoom-fit': S.zoomPct = fitPct(); break;
+    case 'preview': S.preview = true; break;
+    case 'preview-off': S.preview = false; break;
+    case 'toast-off': S.toast = null; break;
+    case 'resize': S.panel = S.panel === 'resize' ? null : 'resize'; S.tool = null; S.rzFail = false; S.rzNoteX = false; S.refit = true;
+      S.areas = []; S.sent = false;                 // resize replaces marking — drop any dragged areas + their chips
+      if (S.panel === 'resize') { const im = imgOf(S.active); S.rzPick = null; S.rzLock = false;
+        S.crop = {fx: .1, fy: .1, fw: .8, fh: .8}; S.rzW = Math.round(.8 * im.w); S.rzH = Math.round(.8 * im.h); } break;
+    case 'rz-note-x': S.rzNoteX = true; break;
+    case 'tool-area': S.tool = S.tool === 'area' ? null : 'area'; S.panel = null; break;
+
+
+    /* export */
+    case 'export': S.panel = 'export'; S.tool = null; S.exError = false; S.exPartial = null; S.refit = true;
+      S.exList = [S.active]; break;                          // the file bar always means "this image"
+    case 'fmt': S.fmtOpen = !S.fmtOpen; break;
+    case 'fmt-set': S.fmt = d('data-f'); S.fmtOpen = false; break;
+    case 'ex-del': {
+      const i = S.images.findIndex(x => x.id === d('data-id'));
+      const at = S.exList.indexOf(i);
+      S.exList = S.exList.filter(k => k !== i);
+      const nxt = S.exList[Math.min(at, S.exList.length - 1)];
+      S.focusAfter = S.exList.length ? '#del-' + (S.images[nxt] || {}).id : '[data-act="ex-cancel"]';
+      break; }
+    case 'ex-cancel': clearLater(); S.panel = null; S.exBusy = false; S.exError = false; S.exPartial = null; S.refit = true; break;
+    case 'ex-go': {
+      if (S.exBusy || !S.exList.length) break;
+      S.exError = false; S.exPartial = null; S.exBusy = true; render();
+      const n = S.exList.length, name = S.exName, ext = exExt();
+      later('export', 1500, () => {
+        S.exBusy = false;
+        if (n >= 4 && S.fmt !== 'PDF') {                     // partial is reachable on a real multi-export
+          const bad = S.exList.slice(-2).map(i => (S.images[i] || {}).name).filter(Boolean);
+          S.exPartial = {ok: n - bad.length, all: n, names: bad.join(' and ')};
+          render(); return; }
+        S.panel = null; toast(name + ext + ' downloaded'); render();
+      });
+      return; }
+
+    /* resize */
+    case 'group': { const g = d('data-g'); S.rzOpen[g] = S.rzOpen[g] ? 0 : 1; break; }
+    case 'tpl': { const t = TPLS.find(x => x.n === d('data-n'));
+      S.rzNoteX = false;                              // a new choice may raise a new note
+      if (S.rzPick === t.n) { S.rzPick = null; break; }
+      S.rzPick = t.n; S.rzW = t.w; S.rzH = t.h;
+      { const im = imgOf(S.active), fracR = (t.w / t.h) * (im.h / im.w);
+        let fw0, fh0; if (fracR >= 1) { fw0 = 1; fh0 = 1 / fracR; } else { fh0 = 1; fw0 = fracR; }
+        const fw = fw0 * .9, fh = fh0 * .9;         // 90% of the largest fit — leaves margin to drag
+        S.crop = {fx: (1 - fw) / 2, fy: (1 - fh) / 2, fw, fh}; }
+      break; }
+    case 'rz-lock': S.rzLock = !S.rzLock; if (S.rzLock) S.rzLockR = (S.rzW || 1) / (S.rzH || 1); break;
+    case 'rz-reset': { const im = imgOf(S.active); S.rzPick = null; S.rzW = im.w; S.rzH = im.h;
+      S.crop = {fx: 0, fy: 0, fw: 1, fh: 1}; S.rzSearch = ''; S.rzFail = false; S.rzNoteX = false; break; }
+    case 'rz-cancel': clearLater(); S.panel = null; S.rzFail = false; S.rzBusy = false; S.refit = true; break;
+    case 'rz-apply': { const t = rzTarget(); if (!rzCheck().crop) break;
+      snapshot();
+      const src = imgOf(S.active);
+      const im = mkImage({w: t.w, h: t.h, tone: src.tone, ver: 'v' + (S.images.length + 1),
+        name: 'aira_gen_pantaloons_diwali_' + t.w + 'x' + t.h + '.png'});
+      S.images.push(im); S.active = S.images.length - 1; S.page = Math.floor(S.active / 10);
+      S.panel = null; S.areas = []; S.refit = true; toast('Cropped to ' + t.w + ' × ' + t.h + ' px as ' + im.ver); break; }
+    case 'rz-gen': {
+      if (!rzCheck().gen) break;
+      if (quotaHit()) { S.panel = null; break; }
+      const t = rzTarget(); S.rzFail = false; S.rzBusy = true; render();
+      later('rzgen', 1800, () => {
+        S.rzBusy = false; S.genCount++;
+        if (S.genCount % 5 === 0) { S.rzFail = true; render(); return; }
+        snapshot();
+        const src = imgOf(S.active);
+        const im = mkImage({w: t.w, h: t.h, tone: src.tone, ver: 'v' + (S.images.length + 1),
+          name: 'aira_gen_pantaloons_diwali_' + t.w + 'x' + t.h + '.png'});
+        S.images.push(im); S.active = S.images.length - 1; S.page = Math.floor(S.active / 10);
+        S.panel = null; S.areas = []; S.refit = true;
+        S.msgs.push({t: 'card', title: 'Pantaloons Diwali sale creative', ver: im.ver, img: im.id});
+        say('Generated at ' + t.w + ' × ' + t.h + ' px' + (t.name ? ' for ' + t.name.toLowerCase() : '') + '. That spent 1 credit.');
+        render();
+      });
+      return; }
+    case 'rz-stop': clearLater(); S.rzBusy = false; toast('Generation stopped — nothing was spent'); break;
+
+    /* gallery */
+    case 'gallery-open': S.gallery = true; break;
+    case 'gall-close': S.gallery = false; S.gallSel = []; break;
+    case 'gall-all': S.gallSel = S.gallSel.length === S.images.length ? [] : S.images.map((_, i) => i); break;
+    case 'gall-export': S.exList = S.gallSel.slice(); S.gallery = false; S.gallSel = [];
+      S.stage = 'editor'; S.panel = 'export'; S.exError = false; S.exPartial = null; S.refit = true; break;
+    case 'gall-toggle': { const i = +d('data-i');   // the hover circle: pure select, never opens
+      S.gallSel = S.gallSel.includes(i) ? S.gallSel.filter(k => k !== i) : S.gallSel.concat([i]); break; }
+    case 'gall-card': { const i = +d('data-i');
+      if (S.gallSel.length) { S.gallSel = S.gallSel.includes(i) ? S.gallSel.filter(k => k !== i) : S.gallSel.concat([i]); break; }
+      S.active = i; S.page = Math.floor(i / 10); S.gallery = false; S.stage = 'editor';
+      S.areas = []; S.sent = false; S.refit = true; break; }
+
+    /* areas */
+    case 'area-del': S.areas = S.areas.filter(x => x.n !== +d('data-n')); break;
+    case 'retry': S.msgs = S.msgs.filter(m => !(m.t === 'banner' && !m.quota)); startEdit('try again'); break;
+  }
+  render();
+}
+
+/* ===================== boot ===================== */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (S.preview) { S.preview = false; return render(); }
+    if (S.gallery) { S.gallery = false; S.gallSel = []; return render(); }
+    if (S.busy || S.regen || S.rzBusy) return act('stop-gen');
+    if (S.panel) { S.panel = null; return render(); }
+    if (S.tool) { S.tool = null; return render(); }
+  }
+});
+let rtm = null;
+window.addEventListener('resize', () => {                      // refit on resize, debounced
+  clearTimeout(rtm); rtm = setTimeout(() => { if (refit() || S.preview) render(); }, 120);
+});
+/* Prototype 2 — boots into the editor with a session of images already made.
+   The create flow (home, clarifying card, two-concept picker) is removed; this
+   prototype is only the gallery, strip, resize, select area and export flows. */
+(function seedSession(){
+  S.images = [
+    mkImage({w:1080,h:1080,tone:'night',ver:'v1',name:'aira_gen_pantaloons_diwali.png'}),
+    mkImage({w:1440,h:480, tone:'warm',ver:'v2',name:'aira_gen_pantaloons_diwali_1440x480.png'}),
+    mkImage({w:1440,h:1131,tone:'cool',ver:'v3',name:'aira_gen_pantaloons_diwali_1440x1131.png'}),
+    mkImage({w:1080,h:1920,tone:'dusk',ver:'v4',name:'aira_gen_pantaloons_diwali_1080x1920.png'}),
+    mkImage({w:1080,h:1350,tone:'night',ver:'v5',name:'aira_gen_pantaloons_diwali_1080x1350.png'}),
+  ];
+  S.active = 0; S.stage = 'editor'; S.view = 'chat'; S.refit = true;
+  S.msgs = [
+    {t:'u', x:'create a diwali sale creative for pantaloons, 50% off'},
+    {t:'card', title:'Pantaloons Diwali sale creative', ver:'v1', img:S.images[0].id},
+    {t:'a', x:"Here's your Pantaloons Diwali creative. Resize it, tell me what to change in chat, or open the gallery to pick several for export."},
+  ];
+})();
+render();</script>
+</body>
+</html>
+
+</body></html>
