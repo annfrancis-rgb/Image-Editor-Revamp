@@ -248,6 +248,13 @@ button,input,textarea{font-family:inherit}
 .thumb{width:48px;height:48px;flex:none;border-radius:var(--aira-radius-md);overflow:hidden;
   border:2px solid transparent;opacity:.5;padding:0;background:var(--aira-bg-canvas);cursor:pointer;
   display:flex;align-items:center;justify-content:center;line-height:0}
+/* overflow / gallery entry: a dashed trailing cell that opens the full gallery */
+.viewall{flex:none;height:48px;padding:0 var(--aira-sp-3);border:1px dashed var(--aira-grey-300);
+  border-radius:var(--aira-radius-md);background:none;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;white-space:nowrap}
+.viewall:hover{background:var(--aira-bg-hover);border-color:var(--aira-indigo-600)}
+.viewall .va1{font:500 13px/16px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-indigo-600)}
+.viewall .va2{font:400 11px/14px 'Roboto',-apple-system,'Segoe UI',sans-serif;color:var(--aira-text-tertiary)}
 .thumb:hover{opacity:.85}
 .thumb.on{border-color:var(--aira-border-brand);opacity:1}
 .tcell{position:relative;flex:none;border-radius:var(--aira-radius-md)}
@@ -883,29 +890,30 @@ function areaOverlay(bw, bh) {
 }
 function stripHTML() {
   if (!S.images.length) return '';
+  const n = S.images.length;
+  const sel = i => S.gallSel.includes(i), selecting = S.gallSel.length > 0;
+  const overflow = n > 10;                          // more images than the strip shows
+  const showTile = overflow;                        // the gallery entry appears only on real overflow — never when all images already fit the strip
+  const tile = `<button class="viewall" data-act="gallery-open" aria-label="View all ${n} image${n > 1 ? 's' : ''} in the gallery">
+      <span class="va1">View all</span><span class="va2">${n} image${n > 1 ? 's' : ''}</span></button>`;
   if (!S.stripOpen) return `<div class="strip"><button class="hidebtn" data-act="strip-toggle">
       <span>Show images</span>${ic(I.chevD, {s: 20, c: '#4D5867'})}</button>
-    <div class="striptools"><button class="gallbtn" data-act="gallery-open">${ic(I.img, {s: 20})}Open gallery</button></div></div>`;
-  const per = 10, pages = Math.max(1, Math.ceil(S.images.length / per));
-  const page = Math.max(0, Math.min(S.page, pages - 1));
-  const slice = S.images.slice(page * per, page * per + per);
-  const more = S.images.length - slice.length;
-  const sel = i => S.gallSel.includes(i), selecting = S.gallSel.length > 0;
+    ${showTile ? `<div class="striptools">${tile}</div>` : ''}</div>`;
+  let shown = overflow ? S.images.slice(0, 9) : S.images;     // a short preview; the tile carries the full set
+  const activeImg = S.images[S.active];                       // the image on the canvas is always in the strip, opaque and selected
+  if (overflow && shown.indexOf(activeImg) === -1) shown = S.images.slice(0, 8).concat(activeImg);
   return `<div class="strip${selecting ? ' selecting' : ''}"><button class="hidebtn" data-act="strip-toggle">
       <span>Hide images</span>${ic(I.chevU, {s: 20, c: '#4D5867'})}</button>
-    ${pages > 1 ? `<button class="chev" data-act="page-prev" aria-label="Previous ten images" ${page === 0 ? 'disabled' : ''}>${ic(I.chevL, {s: 16})}</button>` : ''}
-    <div class="thumbs">${slice.map(im => { const i = S.images.indexOf(im);
+    <div class="thumbs">${shown.map(im => { const i = S.images.indexOf(im);
       return `<div class="tcell${sel(i) ? ' sel' : ''}">
         <button class="thumb${i === S.active ? ' on' : ''}" data-act="pick" data-i="${i}" title="${esc(im.name)}"
           aria-label="Open ${esc(im.name)}" aria-pressed="${i === S.active}">${creative(im.w, im.h, {tone: im.tone, cover: true})}</button>
         <button class="tcheck${sel(i) ? ' on' : ''}" data-act="gall-toggle" data-i="${i}"
           aria-label="${sel(i) ? 'Deselect' : 'Select'} ${esc(im.name)}" aria-pressed="${sel(i)}">${sel(i) ? ic(I.check, {s: 12, c: '#fff', w: 3}) : ''}</button>
-      </div>`; }).join('')}</div>
-    ${pages > 1 ? `<button class="chev" data-act="page-next" aria-label="Next ten images" ${page >= pages - 1 ? 'disabled' : ''}>${ic(I.chevR, {s: 16})}</button>` : ''}
+      </div>`; }).join('')}${showTile ? tile : ''}</div>
     <div class="striptools">
       ${selecting ? `<button class="gallbtn" data-act="strip-clear">Cancel</button>
         <button class="gallbtn primary" data-act="gall-export">${S.gallSel.length === 1 ? 'Export' : 'Export all'}</button>` : ''}
-      <button class="gallbtn" data-act="gallery-open">${ic(I.img, {s: 20})}Open gallery${more > 0 ? ` <span style="color:var(--aira-text-tertiary)">+${more}</span>` : ''}</button>
     </div></div>`;
 }
 /* fit = the largest scale that shows the whole image clear of the toolbar band, never upscaling */
