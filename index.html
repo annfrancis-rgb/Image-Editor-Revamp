@@ -951,7 +951,7 @@ function canvasHTML() {
         : box}</div>
     </div></div>
     ${armed && !S.areas.length ? `<div class="hint">${ic(I.area, {s: 16, c: '#fff'})}Drag to mark an area</div>` : ''}
-    ${S.panel !== 'export' ? `<div class="tools">
+    ${(S.panel !== 'export' && !S.gallSel.length) ? `<div class="tools">
       <div style="display:flex;align-items:center;gap:1px">
         <button class="tbtn" data-act="zoom-out" aria-label="Zoom out">${ic(I.minus, {s: 20})}</button>
         <span class="zoom">${S.zoomPct}%</span>
@@ -1200,7 +1200,8 @@ function render() {
     ${S.gallery ? galleryHTML() : ''}
     ${S.preview ? `<div style="position:absolute;inset:0;background:rgba(17,24,39,.88);z-index:70;display:flex;
         align-items:center;justify-content:center" data-act="preview-off">
-        <div style="line-height:0">${(f => creative(f.w, f.h, im))(fit(window.innerWidth - 160, window.innerHeight - 160, im))}</div>
+        ${(() => { const f = fit(window.innerWidth - 160, window.innerHeight - 160, im);
+          return `<div style="line-height:0;width:${f.w}px;height:${f.h}px;border-radius:var(--aira-radius-md);overflow:hidden">${creative(f.w, f.h, im)}</div>`; })()}
         <button class="iconbtn" data-act="preview-off" style="position:absolute;right:24px;top:24px" aria-label="Close preview">${ic(I.x, {s: 20, c: '#fff'})}</button></div>` : ''}
   </div>`;
   bind(); bindDrag(); bindCrop(); restoreScroll(); restoreFocus();
@@ -1536,11 +1537,11 @@ function act(a, el) {
     case 'preview-off': S.preview = false; break;
     case 'toast-off': S.toast = null; break;
     case 'resize': S.panel = S.panel === 'resize' ? null : 'resize'; S.tool = null; S.rzFail = false; S.rzNoteX = false; S.refit = true;
-      S.areas = []; S.sent = false;                 // resize replaces marking — drop any dragged areas + their chips
+      S.areas = []; S.sent = false; S.gallSel = [];   // editing and export/selection are mutually exclusive
       if (S.panel === 'resize') { const im = imgOf(S.active); S.rzPick = null; S.rzLock = false;
         S.crop = {fx: .1, fy: .1, fw: .8, fh: .8}; S.rzW = Math.round(.8 * im.w); S.rzH = Math.round(.8 * im.h); } break;
     case 'rz-note-x': S.rzNoteX = true; break;
-    case 'tool-area': S.tool = S.tool === 'area' ? null : 'area'; S.panel = null; break;
+    case 'tool-area': S.tool = S.tool === 'area' ? null : 'area'; S.panel = null; S.gallSel = []; break;
 
 
     /* export */
@@ -1619,9 +1620,12 @@ function act(a, el) {
     case 'gall-export': S.gallery = false;                    // keep the selection live so the export list tracks it
       S.stage = 'editor'; S.panel = 'export'; S.exError = false; S.exPartial = null; S.refit = true; break;
     case 'gall-toggle': { const i = +d('data-i');   // the hover circle: pure select, never opens
+      if (S.panel === 'resize') { S.panel = null; S.refit = true; }   // selecting exits edit mode — never both at once
+      if (S.tool) { S.tool = null; S.areas = []; S.sent = false; S.refit = true; }
       S.gallSel = S.gallSel.includes(i) ? S.gallSel.filter(k => k !== i) : S.gallSel.concat([i]); break; }
     case 'gall-card': { const i = +d('data-i');
-      if (S.gallSel.length) { S.gallSel = S.gallSel.includes(i) ? S.gallSel.filter(k => k !== i) : S.gallSel.concat([i]); break; }
+      if (S.gallSel.length) { if (S.panel === 'resize') S.panel = null; if (S.tool) { S.tool = null; S.areas = []; }
+        S.gallSel = S.gallSel.includes(i) ? S.gallSel.filter(k => k !== i) : S.gallSel.concat([i]); break; }
       S.active = i; S.page = Math.floor(i / 10); S.gallery = false; S.stage = 'editor';
       S.areas = []; S.sent = false; S.refit = true; break; }
 
