@@ -942,6 +942,8 @@ function canvasHTML() {
       <div style="display:flex;align-items:center;gap:2px">
         <button class="tool${S.panel === 'resize' ? ' on' : ''}" data-act="resize" aria-pressed="${S.panel === 'resize'}">
           ${ic(I.crop, {s: 20})}<span class="tlabel">Resize</span></button>
+        <button class="tool${armed ? ' on' : ''}" data-act="tool-area" aria-pressed="${armed}">
+          ${ic(I.area, {s: 20})}<span class="tlabel">Select area</span></button>
       </div>
     </div>
     ${S.toast ? `<div class="toast">${ic(I.check, {s: 20, c: '#364152', w: 1.8})}<span style="flex:1">${esc(S.toast)}</span>
@@ -1635,7 +1637,7 @@ window.addEventListener('resize', () => {                      // refit on resiz
   S.msgs = [
     {t:'u', x:'create a diwali sale creative for pantaloons, 50% off'},
     {t:'card', title:'Pantaloons Diwali sale creative', ver:'v1', img:S.images[0].id},
-    {t:'a', x:"Here's your Pantaloons Diwali creative. Resize it, tell me what to change in chat, or open the gallery to pick several for export."},
+    {t:'a', x:"Here's your Pantaloons Diwali creative. Resize it, mark an area to change, or open the gallery to pick several for export."},
   ];
 })();
 render();</script>
